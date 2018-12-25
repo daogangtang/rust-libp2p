@@ -31,6 +31,10 @@ use std::collections::hash_map::{DefaultHasher, HashMap};
 use tokio_io::{AsyncRead, AsyncWrite};
 use topic::{Topic, TopicHash};
 
+
+pub type Mesh = HashMap<TopicHash, Vec<PeerId>>;
+
+
 /// Network behaviour that automatically identifies nodes periodically, and returns information
 /// about them.
 pub struct Gossipsub<TSubstream> {
@@ -61,13 +65,13 @@ pub struct Gossipsub<TSubstream> {
 
     // the mesh peers to which we are publishing to without topic membership, as a map of topics to
     // lists of peers
-    fanout: Mesh,
+    // fanout: Mesh,
 
     // protocol has but no need in Rust implementation, for it is the same as mcache
     // seen: MessageCache,
 
     // a message cache that contains the messages for the last few heartbeat ticks
-    mcache: MessageCache,
+    // mcache: MessageCache,
 
 }
 
@@ -81,6 +85,7 @@ impl<TSubstream> Gossipsub<TSubstream> {
             subscribed_topics: SmallVec::new(),
             received: CuckooFilter::new(),
             marker: PhantomData,
+            mesh: Mesh::new(),
         }
     }
 }
@@ -145,13 +150,6 @@ impl<TSubstream> Gossipsub<TSubstream> {
     ///
     /// > **Note**: Doesn't do anything if we're not subscribed to the topic.
     pub fn publish(&mut self, topic: impl Into<TopicHash>, data: impl Into<Vec<u8>>) {
-        self.publish_many(iter::once(topic), data)
-    }
-
-    /// Publishes a message with multiple topics to the network.
-    ///
-    /// > **Note**: Doesn't do anything if we're not subscribed to any of the topics.
-    pub fn publish_many(&mut self, topic: impl IntoIterator<Item = impl Into<TopicHash>>, data: impl Into<Vec<u8>>) {
         let message = GossipsubMessage {
             source: self.local_peer_id.clone(),
             data: data.into(),
@@ -159,22 +157,60 @@ impl<TSubstream> Gossipsub<TSubstream> {
             // with packets with the predetermined sequence numbers and absorb our legitimate
             // messages. We therefore use a random number.
             sequence_number: rand::random::<[u8; 20]>().to_vec(),
-            topics: topic.into_iter().map(|t| t.into().clone()).collect(),
+            topics: vec![topic],
         };
 
         // Don't publish the message if we're not subscribed ourselves to any of the topics.
-        if !self.subscribed_topics.iter().any(|t| message.topics.iter().any(|u| t.hash() == u)) {
+        if !self.subscribed_topics.iter().any(|t| topic == t) {
             return;
         }
 
         self.received.add(&message);
 
-        // Send to peers we know are subscribed to the topic.
-        for (peer_id, sub_topic) in self.connected_peers.iter() {
-            if !sub_topic.iter().any(|t| message.topics.iter().any(|u| t == u)) {
-                continue;
-            }
+        // check topic peer list in self.mesh if is empty, if empty try to collect it from 
+        // connected_peers
+        // TODO: use hashmap.entry().or_insert();
+        let peers = match self.mesh.get(topic) {
+            Some(a_peers) => {
+                let mut new_peers;
+                if a_peers.len() == 0 {
+                    new_peers = vec![];
+                    for (peer_id, sub_topic) in self.connected_peers.iter() {
+                        if sub_topic.iter().any(|t| topic == t)) {
+                            new_peers.push(peer_id);
+                        }
+                    }
+                }
+                else {
+                    new_peers = a_peers;
+                }
+                
+                // then random select some items from new_peers to form mesh peers
+                // using TARGET_MESH_DEGREE
+                //let mesh_peers = ....;
 
+                mesh_peers
+            },
+            None => {
+                self.mesh.insert(topic, vec![]);
+                let mut new_peers = vec![];
+                for (peer_id, sub_topic) in self.connected_peers.iter() {
+                    if sub_topic.iter().any(|t| topic == t)) {
+                        new_peers.push(peer_id);
+                    }
+                }
+
+                // then random select some items from new_peers to form mesh peers
+                // using TARGET_MESH_DEGREE
+                //let mesh_peers = ....;
+
+                mesh_peers
+            }
+        
+        }
+
+        // Send to peers we know are subscribed to the topic.
+        for peer_id in peers.iter() {
             self.events.push_back(NetworkBehaviourAction::SendEvent {
                 peer_id: peer_id.clone(),
                 event: GossipsubRpc {
@@ -184,6 +220,7 @@ impl<TSubstream> Gossipsub<TSubstream> {
             });
         }
     }
+
 }
 
 impl<TSubstream, TTopology> NetworkBehaviour<TTopology> for Gossipsub<TSubstream>
