@@ -26,6 +26,7 @@ pub struct RPC {
     // message fields
     subscriptions: ::protobuf::RepeatedField<RPC_SubOpts>,
     publish: ::protobuf::RepeatedField<Message>,
+    control: ::protobuf::SingularPtrField<ControlMessage>,
     // special fields
     unknown_fields: ::protobuf::UnknownFields,
     cached_size: ::protobuf::CachedSize,
@@ -36,7 +37,7 @@ impl RPC {
         ::std::default::Default::default()
     }
 
-    // repeated .floodsub.pb.RPC.SubOpts subscriptions = 1;
+    // repeated .gossipsub.pb.RPC.SubOpts subscriptions = 1;
 
     pub fn clear_subscriptions(&mut self) {
         self.subscriptions.clear();
@@ -61,7 +62,7 @@ impl RPC {
         &self.subscriptions
     }
 
-    // repeated .floodsub.pb.Message publish = 2;
+    // repeated .gossipsub.pb.Message publish = 2;
 
     pub fn clear_publish(&mut self) {
         self.publish.clear();
@@ -85,6 +86,39 @@ impl RPC {
     pub fn get_publish(&self) -> &[Message] {
         &self.publish
     }
+
+    // optional .gossipsub.pb.ControlMessage control = 3;
+
+    pub fn clear_control(&mut self) {
+        self.control.clear();
+    }
+
+    pub fn has_control(&self) -> bool {
+        self.control.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_control(&mut self, v: ControlMessage) {
+        self.control = ::protobuf::SingularPtrField::some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_control(&mut self) -> &mut ControlMessage {
+        if self.control.is_none() {
+            self.control.set_default();
+        }
+        self.control.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_control(&mut self) -> ControlMessage {
+        self.control.take().unwrap_or_else(|| ControlMessage::new())
+    }
+
+    pub fn get_control(&self) -> &ControlMessage {
+        self.control.as_ref().unwrap_or_else(|| ControlMessage::default_instance())
+    }
 }
 
 impl ::protobuf::Message for RPC {
@@ -95,6 +129,11 @@ impl ::protobuf::Message for RPC {
             }
         };
         for v in &self.publish {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.control {
             if !v.is_initialized() {
                 return false;
             }
@@ -111,6 +150,9 @@ impl ::protobuf::Message for RPC {
                 },
                 2 => {
                     ::protobuf::rt::read_repeated_message_into(wire_type, is, &mut self.publish)?;
+                },
+                3 => {
+                    ::protobuf::rt::read_singular_message_into(wire_type, is, &mut self.control)?;
                 },
                 _ => {
                     ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
@@ -132,6 +174,10 @@ impl ::protobuf::Message for RPC {
             let len = value.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
         };
+        if let Some(ref v) = self.control.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
         self.cached_size.set(my_size);
         my_size
@@ -148,6 +194,11 @@ impl ::protobuf::Message for RPC {
             os.write_raw_varint32(v.get_cached_size())?;
             v.write_to_with_cached_sizes(os)?;
         };
+        if let Some(ref v) = self.control.as_ref() {
+            os.write_tag(3, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+            os.write_raw_varint32(v.get_cached_size())?;
+            v.write_to_with_cached_sizes(os)?;
+        }
         os.write_unknown_fields(self.get_unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -200,6 +251,11 @@ impl ::protobuf::Message for RPC {
                     |m: &RPC| { &m.publish },
                     |m: &mut RPC| { &mut m.publish },
                 ));
+                fields.push(::protobuf::reflect::accessor::make_singular_ptr_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<ControlMessage>>(
+                    "control",
+                    |m: &RPC| { &m.control },
+                    |m: &mut RPC| { &mut m.control },
+                ));
                 ::protobuf::reflect::MessageDescriptor::new::<RPC>(
                     "RPC",
                     fields,
@@ -224,6 +280,7 @@ impl ::protobuf::Clear for RPC {
     fn clear(&mut self) {
         self.clear_subscriptions();
         self.clear_publish();
+        self.clear_control();
         self.unknown_fields.clear();
     }
 }
@@ -459,6 +516,8 @@ pub struct Message {
     data: ::protobuf::SingularField<::std::vec::Vec<u8>>,
     seqno: ::protobuf::SingularField<::std::vec::Vec<u8>>,
     topicIDs: ::protobuf::RepeatedField<::std::string::String>,
+    signature: ::protobuf::SingularField<::std::vec::Vec<u8>>,
+    key: ::protobuf::SingularField<::std::vec::Vec<u8>>,
     // special fields
     unknown_fields: ::protobuf::UnknownFields,
     cached_size: ::protobuf::CachedSize,
@@ -601,6 +660,78 @@ impl Message {
     pub fn get_topicIDs(&self) -> &[::std::string::String] {
         &self.topicIDs
     }
+
+    // optional bytes signature = 5;
+
+    pub fn clear_signature(&mut self) {
+        self.signature.clear();
+    }
+
+    pub fn has_signature(&self) -> bool {
+        self.signature.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_signature(&mut self, v: ::std::vec::Vec<u8>) {
+        self.signature = ::protobuf::SingularField::some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_signature(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.signature.is_none() {
+            self.signature.set_default();
+        }
+        self.signature.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_signature(&mut self) -> ::std::vec::Vec<u8> {
+        self.signature.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    pub fn get_signature(&self) -> &[u8] {
+        match self.signature.as_ref() {
+            Some(v) => &v,
+            None => &[],
+        }
+    }
+
+    // optional bytes key = 6;
+
+    pub fn clear_key(&mut self) {
+        self.key.clear();
+    }
+
+    pub fn has_key(&self) -> bool {
+        self.key.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_key(&mut self, v: ::std::vec::Vec<u8>) {
+        self.key = ::protobuf::SingularField::some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_key(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.key.is_none() {
+            self.key.set_default();
+        }
+        self.key.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_key(&mut self) -> ::std::vec::Vec<u8> {
+        self.key.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    pub fn get_key(&self) -> &[u8] {
+        match self.key.as_ref() {
+            Some(v) => &v,
+            None => &[],
+        }
+    }
 }
 
 impl ::protobuf::Message for Message {
@@ -623,6 +754,12 @@ impl ::protobuf::Message for Message {
                 },
                 4 => {
                     ::protobuf::rt::read_repeated_string_into(wire_type, is, &mut self.topicIDs)?;
+                },
+                5 => {
+                    ::protobuf::rt::read_singular_bytes_into(wire_type, is, &mut self.signature)?;
+                },
+                6 => {
+                    ::protobuf::rt::read_singular_bytes_into(wire_type, is, &mut self.key)?;
                 },
                 _ => {
                     ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
@@ -648,6 +785,12 @@ impl ::protobuf::Message for Message {
         for value in &self.topicIDs {
             my_size += ::protobuf::rt::string_size(4, &value);
         };
+        if let Some(ref v) = self.signature.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(5, &v);
+        }
+        if let Some(ref v) = self.key.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(6, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
         self.cached_size.set(my_size);
         my_size
@@ -666,6 +809,12 @@ impl ::protobuf::Message for Message {
         for v in &self.topicIDs {
             os.write_string(4, &v)?;
         };
+        if let Some(ref v) = self.signature.as_ref() {
+            os.write_bytes(5, &v)?;
+        }
+        if let Some(ref v) = self.key.as_ref() {
+            os.write_bytes(6, &v)?;
+        }
         os.write_unknown_fields(self.get_unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -728,6 +877,16 @@ impl ::protobuf::Message for Message {
                     |m: &Message| { &m.topicIDs },
                     |m: &mut Message| { &mut m.topicIDs },
                 ));
+                fields.push(::protobuf::reflect::accessor::make_singular_field_accessor::<_, ::protobuf::types::ProtobufTypeBytes>(
+                    "signature",
+                    |m: &Message| { &m.signature },
+                    |m: &mut Message| { &mut m.signature },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_singular_field_accessor::<_, ::protobuf::types::ProtobufTypeBytes>(
+                    "key",
+                    |m: &Message| { &m.key },
+                    |m: &mut Message| { &mut m.key },
+                ));
                 ::protobuf::reflect::MessageDescriptor::new::<Message>(
                     "Message",
                     fields,
@@ -754,6 +913,8 @@ impl ::protobuf::Clear for Message {
         self.clear_data();
         self.clear_seqno();
         self.clear_topicIDs();
+        self.clear_signature();
+        self.clear_key();
         self.unknown_fields.clear();
     }
 }
@@ -765,6 +926,1045 @@ impl ::std::fmt::Debug for Message {
 }
 
 impl ::protobuf::reflect::ProtobufValue for Message {
+    fn as_ref(&self) -> ::protobuf::reflect::ProtobufValueRef {
+        ::protobuf::reflect::ProtobufValueRef::Message(self)
+    }
+}
+
+#[derive(PartialEq,Clone,Default)]
+pub struct ControlMessage {
+    // message fields
+    ihave: ::protobuf::RepeatedField<ControlIHave>,
+    iwant: ::protobuf::RepeatedField<ControlIWant>,
+    graft: ::protobuf::RepeatedField<ControlGraft>,
+    prune: ::protobuf::RepeatedField<ControlPrune>,
+    // special fields
+    unknown_fields: ::protobuf::UnknownFields,
+    cached_size: ::protobuf::CachedSize,
+}
+
+impl ControlMessage {
+    pub fn new() -> ControlMessage {
+        ::std::default::Default::default()
+    }
+
+    // repeated .gossipsub.pb.ControlIHave ihave = 1;
+
+    pub fn clear_ihave(&mut self) {
+        self.ihave.clear();
+    }
+
+    // Param is passed by value, moved
+    pub fn set_ihave(&mut self, v: ::protobuf::RepeatedField<ControlIHave>) {
+        self.ihave = v;
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_ihave(&mut self) -> &mut ::protobuf::RepeatedField<ControlIHave> {
+        &mut self.ihave
+    }
+
+    // Take field
+    pub fn take_ihave(&mut self) -> ::protobuf::RepeatedField<ControlIHave> {
+        ::std::mem::replace(&mut self.ihave, ::protobuf::RepeatedField::new())
+    }
+
+    pub fn get_ihave(&self) -> &[ControlIHave] {
+        &self.ihave
+    }
+
+    // repeated .gossipsub.pb.ControlIWant iwant = 2;
+
+    pub fn clear_iwant(&mut self) {
+        self.iwant.clear();
+    }
+
+    // Param is passed by value, moved
+    pub fn set_iwant(&mut self, v: ::protobuf::RepeatedField<ControlIWant>) {
+        self.iwant = v;
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_iwant(&mut self) -> &mut ::protobuf::RepeatedField<ControlIWant> {
+        &mut self.iwant
+    }
+
+    // Take field
+    pub fn take_iwant(&mut self) -> ::protobuf::RepeatedField<ControlIWant> {
+        ::std::mem::replace(&mut self.iwant, ::protobuf::RepeatedField::new())
+    }
+
+    pub fn get_iwant(&self) -> &[ControlIWant] {
+        &self.iwant
+    }
+
+    // repeated .gossipsub.pb.ControlGraft graft = 3;
+
+    pub fn clear_graft(&mut self) {
+        self.graft.clear();
+    }
+
+    // Param is passed by value, moved
+    pub fn set_graft(&mut self, v: ::protobuf::RepeatedField<ControlGraft>) {
+        self.graft = v;
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_graft(&mut self) -> &mut ::protobuf::RepeatedField<ControlGraft> {
+        &mut self.graft
+    }
+
+    // Take field
+    pub fn take_graft(&mut self) -> ::protobuf::RepeatedField<ControlGraft> {
+        ::std::mem::replace(&mut self.graft, ::protobuf::RepeatedField::new())
+    }
+
+    pub fn get_graft(&self) -> &[ControlGraft] {
+        &self.graft
+    }
+
+    // repeated .gossipsub.pb.ControlPrune prune = 4;
+
+    pub fn clear_prune(&mut self) {
+        self.prune.clear();
+    }
+
+    // Param is passed by value, moved
+    pub fn set_prune(&mut self, v: ::protobuf::RepeatedField<ControlPrune>) {
+        self.prune = v;
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_prune(&mut self) -> &mut ::protobuf::RepeatedField<ControlPrune> {
+        &mut self.prune
+    }
+
+    // Take field
+    pub fn take_prune(&mut self) -> ::protobuf::RepeatedField<ControlPrune> {
+        ::std::mem::replace(&mut self.prune, ::protobuf::RepeatedField::new())
+    }
+
+    pub fn get_prune(&self) -> &[ControlPrune] {
+        &self.prune
+    }
+}
+
+impl ::protobuf::Message for ControlMessage {
+    fn is_initialized(&self) -> bool {
+        for v in &self.ihave {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.iwant {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.graft {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.prune {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream) -> ::protobuf::ProtobufResult<()> {
+        while !is.eof()? {
+            let (field_number, wire_type) = is.read_tag_unpack()?;
+            match field_number {
+                1 => {
+                    ::protobuf::rt::read_repeated_message_into(wire_type, is, &mut self.ihave)?;
+                },
+                2 => {
+                    ::protobuf::rt::read_repeated_message_into(wire_type, is, &mut self.iwant)?;
+                },
+                3 => {
+                    ::protobuf::rt::read_repeated_message_into(wire_type, is, &mut self.graft)?;
+                },
+                4 => {
+                    ::protobuf::rt::read_repeated_message_into(wire_type, is, &mut self.prune)?;
+                },
+                _ => {
+                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u32 {
+        let mut my_size = 0;
+        for value in &self.ihave {
+            let len = value.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+        };
+        for value in &self.iwant {
+            let len = value.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+        };
+        for value in &self.graft {
+            let len = value.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+        };
+        for value in &self.prune {
+            let len = value.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint32_size(len) + len;
+        };
+        my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
+        self.cached_size.set(my_size);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream) -> ::protobuf::ProtobufResult<()> {
+        for v in &self.ihave {
+            os.write_tag(1, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+            os.write_raw_varint32(v.get_cached_size())?;
+            v.write_to_with_cached_sizes(os)?;
+        };
+        for v in &self.iwant {
+            os.write_tag(2, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+            os.write_raw_varint32(v.get_cached_size())?;
+            v.write_to_with_cached_sizes(os)?;
+        };
+        for v in &self.graft {
+            os.write_tag(3, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+            os.write_raw_varint32(v.get_cached_size())?;
+            v.write_to_with_cached_sizes(os)?;
+        };
+        for v in &self.prune {
+            os.write_tag(4, ::protobuf::wire_format::WireTypeLengthDelimited)?;
+            os.write_raw_varint32(v.get_cached_size())?;
+            v.write_to_with_cached_sizes(os)?;
+        };
+        os.write_unknown_fields(self.get_unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn get_cached_size(&self) -> u32 {
+        self.cached_size.get()
+    }
+
+    fn get_unknown_fields(&self) -> &::protobuf::UnknownFields {
+        &self.unknown_fields
+    }
+
+    fn mut_unknown_fields(&mut self) -> &mut ::protobuf::UnknownFields {
+        &mut self.unknown_fields
+    }
+
+    fn as_any(&self) -> &::std::any::Any {
+        self as &::std::any::Any
+    }
+    fn as_any_mut(&mut self) -> &mut ::std::any::Any {
+        self as &mut ::std::any::Any
+    }
+    fn into_any(self: Box<Self>) -> ::std::boxed::Box<::std::any::Any> {
+        self
+    }
+
+    fn descriptor(&self) -> &'static ::protobuf::reflect::MessageDescriptor {
+        Self::descriptor_static()
+    }
+
+    fn new() -> ControlMessage {
+        ControlMessage::new()
+    }
+
+    fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
+        static mut descriptor: ::protobuf::lazy::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const ::protobuf::reflect::MessageDescriptor,
+        };
+        unsafe {
+            descriptor.get(|| {
+                let mut fields = ::std::vec::Vec::new();
+                fields.push(::protobuf::reflect::accessor::make_repeated_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<ControlIHave>>(
+                    "ihave",
+                    |m: &ControlMessage| { &m.ihave },
+                    |m: &mut ControlMessage| { &mut m.ihave },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_repeated_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<ControlIWant>>(
+                    "iwant",
+                    |m: &ControlMessage| { &m.iwant },
+                    |m: &mut ControlMessage| { &mut m.iwant },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_repeated_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<ControlGraft>>(
+                    "graft",
+                    |m: &ControlMessage| { &m.graft },
+                    |m: &mut ControlMessage| { &mut m.graft },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_repeated_field_accessor::<_, ::protobuf::types::ProtobufTypeMessage<ControlPrune>>(
+                    "prune",
+                    |m: &ControlMessage| { &m.prune },
+                    |m: &mut ControlMessage| { &mut m.prune },
+                ));
+                ::protobuf::reflect::MessageDescriptor::new::<ControlMessage>(
+                    "ControlMessage",
+                    fields,
+                    file_descriptor_proto()
+                )
+            })
+        }
+    }
+
+    fn default_instance() -> &'static ControlMessage {
+        static mut instance: ::protobuf::lazy::Lazy<ControlMessage> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const ControlMessage,
+        };
+        unsafe {
+            instance.get(ControlMessage::new)
+        }
+    }
+}
+
+impl ::protobuf::Clear for ControlMessage {
+    fn clear(&mut self) {
+        self.clear_ihave();
+        self.clear_iwant();
+        self.clear_graft();
+        self.clear_prune();
+        self.unknown_fields.clear();
+    }
+}
+
+impl ::std::fmt::Debug for ControlMessage {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for ControlMessage {
+    fn as_ref(&self) -> ::protobuf::reflect::ProtobufValueRef {
+        ::protobuf::reflect::ProtobufValueRef::Message(self)
+    }
+}
+
+#[derive(PartialEq,Clone,Default)]
+pub struct ControlIHave {
+    // message fields
+    topicID: ::protobuf::SingularField<::std::string::String>,
+    messageIDs: ::protobuf::RepeatedField<::std::string::String>,
+    // special fields
+    unknown_fields: ::protobuf::UnknownFields,
+    cached_size: ::protobuf::CachedSize,
+}
+
+impl ControlIHave {
+    pub fn new() -> ControlIHave {
+        ::std::default::Default::default()
+    }
+
+    // optional string topicID = 1;
+
+    pub fn clear_topicID(&mut self) {
+        self.topicID.clear();
+    }
+
+    pub fn has_topicID(&self) -> bool {
+        self.topicID.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_topicID(&mut self, v: ::std::string::String) {
+        self.topicID = ::protobuf::SingularField::some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_topicID(&mut self) -> &mut ::std::string::String {
+        if self.topicID.is_none() {
+            self.topicID.set_default();
+        }
+        self.topicID.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_topicID(&mut self) -> ::std::string::String {
+        self.topicID.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    pub fn get_topicID(&self) -> &str {
+        match self.topicID.as_ref() {
+            Some(v) => &v,
+            None => "",
+        }
+    }
+
+    // repeated string messageIDs = 2;
+
+    pub fn clear_messageIDs(&mut self) {
+        self.messageIDs.clear();
+    }
+
+    // Param is passed by value, moved
+    pub fn set_messageIDs(&mut self, v: ::protobuf::RepeatedField<::std::string::String>) {
+        self.messageIDs = v;
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_messageIDs(&mut self) -> &mut ::protobuf::RepeatedField<::std::string::String> {
+        &mut self.messageIDs
+    }
+
+    // Take field
+    pub fn take_messageIDs(&mut self) -> ::protobuf::RepeatedField<::std::string::String> {
+        ::std::mem::replace(&mut self.messageIDs, ::protobuf::RepeatedField::new())
+    }
+
+    pub fn get_messageIDs(&self) -> &[::std::string::String] {
+        &self.messageIDs
+    }
+}
+
+impl ::protobuf::Message for ControlIHave {
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream) -> ::protobuf::ProtobufResult<()> {
+        while !is.eof()? {
+            let (field_number, wire_type) = is.read_tag_unpack()?;
+            match field_number {
+                1 => {
+                    ::protobuf::rt::read_singular_string_into(wire_type, is, &mut self.topicID)?;
+                },
+                2 => {
+                    ::protobuf::rt::read_repeated_string_into(wire_type, is, &mut self.messageIDs)?;
+                },
+                _ => {
+                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u32 {
+        let mut my_size = 0;
+        if let Some(ref v) = self.topicID.as_ref() {
+            my_size += ::protobuf::rt::string_size(1, &v);
+        }
+        for value in &self.messageIDs {
+            my_size += ::protobuf::rt::string_size(2, &value);
+        };
+        my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
+        self.cached_size.set(my_size);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream) -> ::protobuf::ProtobufResult<()> {
+        if let Some(ref v) = self.topicID.as_ref() {
+            os.write_string(1, &v)?;
+        }
+        for v in &self.messageIDs {
+            os.write_string(2, &v)?;
+        };
+        os.write_unknown_fields(self.get_unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn get_cached_size(&self) -> u32 {
+        self.cached_size.get()
+    }
+
+    fn get_unknown_fields(&self) -> &::protobuf::UnknownFields {
+        &self.unknown_fields
+    }
+
+    fn mut_unknown_fields(&mut self) -> &mut ::protobuf::UnknownFields {
+        &mut self.unknown_fields
+    }
+
+    fn as_any(&self) -> &::std::any::Any {
+        self as &::std::any::Any
+    }
+    fn as_any_mut(&mut self) -> &mut ::std::any::Any {
+        self as &mut ::std::any::Any
+    }
+    fn into_any(self: Box<Self>) -> ::std::boxed::Box<::std::any::Any> {
+        self
+    }
+
+    fn descriptor(&self) -> &'static ::protobuf::reflect::MessageDescriptor {
+        Self::descriptor_static()
+    }
+
+    fn new() -> ControlIHave {
+        ControlIHave::new()
+    }
+
+    fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
+        static mut descriptor: ::protobuf::lazy::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const ::protobuf::reflect::MessageDescriptor,
+        };
+        unsafe {
+            descriptor.get(|| {
+                let mut fields = ::std::vec::Vec::new();
+                fields.push(::protobuf::reflect::accessor::make_singular_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
+                    "topicID",
+                    |m: &ControlIHave| { &m.topicID },
+                    |m: &mut ControlIHave| { &mut m.topicID },
+                ));
+                fields.push(::protobuf::reflect::accessor::make_repeated_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
+                    "messageIDs",
+                    |m: &ControlIHave| { &m.messageIDs },
+                    |m: &mut ControlIHave| { &mut m.messageIDs },
+                ));
+                ::protobuf::reflect::MessageDescriptor::new::<ControlIHave>(
+                    "ControlIHave",
+                    fields,
+                    file_descriptor_proto()
+                )
+            })
+        }
+    }
+
+    fn default_instance() -> &'static ControlIHave {
+        static mut instance: ::protobuf::lazy::Lazy<ControlIHave> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const ControlIHave,
+        };
+        unsafe {
+            instance.get(ControlIHave::new)
+        }
+    }
+}
+
+impl ::protobuf::Clear for ControlIHave {
+    fn clear(&mut self) {
+        self.clear_topicID();
+        self.clear_messageIDs();
+        self.unknown_fields.clear();
+    }
+}
+
+impl ::std::fmt::Debug for ControlIHave {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for ControlIHave {
+    fn as_ref(&self) -> ::protobuf::reflect::ProtobufValueRef {
+        ::protobuf::reflect::ProtobufValueRef::Message(self)
+    }
+}
+
+#[derive(PartialEq,Clone,Default)]
+pub struct ControlIWant {
+    // message fields
+    messageIDs: ::protobuf::RepeatedField<::std::string::String>,
+    // special fields
+    unknown_fields: ::protobuf::UnknownFields,
+    cached_size: ::protobuf::CachedSize,
+}
+
+impl ControlIWant {
+    pub fn new() -> ControlIWant {
+        ::std::default::Default::default()
+    }
+
+    // repeated string messageIDs = 1;
+
+    pub fn clear_messageIDs(&mut self) {
+        self.messageIDs.clear();
+    }
+
+    // Param is passed by value, moved
+    pub fn set_messageIDs(&mut self, v: ::protobuf::RepeatedField<::std::string::String>) {
+        self.messageIDs = v;
+    }
+
+    // Mutable pointer to the field.
+    pub fn mut_messageIDs(&mut self) -> &mut ::protobuf::RepeatedField<::std::string::String> {
+        &mut self.messageIDs
+    }
+
+    // Take field
+    pub fn take_messageIDs(&mut self) -> ::protobuf::RepeatedField<::std::string::String> {
+        ::std::mem::replace(&mut self.messageIDs, ::protobuf::RepeatedField::new())
+    }
+
+    pub fn get_messageIDs(&self) -> &[::std::string::String] {
+        &self.messageIDs
+    }
+}
+
+impl ::protobuf::Message for ControlIWant {
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream) -> ::protobuf::ProtobufResult<()> {
+        while !is.eof()? {
+            let (field_number, wire_type) = is.read_tag_unpack()?;
+            match field_number {
+                1 => {
+                    ::protobuf::rt::read_repeated_string_into(wire_type, is, &mut self.messageIDs)?;
+                },
+                _ => {
+                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u32 {
+        let mut my_size = 0;
+        for value in &self.messageIDs {
+            my_size += ::protobuf::rt::string_size(1, &value);
+        };
+        my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
+        self.cached_size.set(my_size);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream) -> ::protobuf::ProtobufResult<()> {
+        for v in &self.messageIDs {
+            os.write_string(1, &v)?;
+        };
+        os.write_unknown_fields(self.get_unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn get_cached_size(&self) -> u32 {
+        self.cached_size.get()
+    }
+
+    fn get_unknown_fields(&self) -> &::protobuf::UnknownFields {
+        &self.unknown_fields
+    }
+
+    fn mut_unknown_fields(&mut self) -> &mut ::protobuf::UnknownFields {
+        &mut self.unknown_fields
+    }
+
+    fn as_any(&self) -> &::std::any::Any {
+        self as &::std::any::Any
+    }
+    fn as_any_mut(&mut self) -> &mut ::std::any::Any {
+        self as &mut ::std::any::Any
+    }
+    fn into_any(self: Box<Self>) -> ::std::boxed::Box<::std::any::Any> {
+        self
+    }
+
+    fn descriptor(&self) -> &'static ::protobuf::reflect::MessageDescriptor {
+        Self::descriptor_static()
+    }
+
+    fn new() -> ControlIWant {
+        ControlIWant::new()
+    }
+
+    fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
+        static mut descriptor: ::protobuf::lazy::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const ::protobuf::reflect::MessageDescriptor,
+        };
+        unsafe {
+            descriptor.get(|| {
+                let mut fields = ::std::vec::Vec::new();
+                fields.push(::protobuf::reflect::accessor::make_repeated_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
+                    "messageIDs",
+                    |m: &ControlIWant| { &m.messageIDs },
+                    |m: &mut ControlIWant| { &mut m.messageIDs },
+                ));
+                ::protobuf::reflect::MessageDescriptor::new::<ControlIWant>(
+                    "ControlIWant",
+                    fields,
+                    file_descriptor_proto()
+                )
+            })
+        }
+    }
+
+    fn default_instance() -> &'static ControlIWant {
+        static mut instance: ::protobuf::lazy::Lazy<ControlIWant> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const ControlIWant,
+        };
+        unsafe {
+            instance.get(ControlIWant::new)
+        }
+    }
+}
+
+impl ::protobuf::Clear for ControlIWant {
+    fn clear(&mut self) {
+        self.clear_messageIDs();
+        self.unknown_fields.clear();
+    }
+}
+
+impl ::std::fmt::Debug for ControlIWant {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for ControlIWant {
+    fn as_ref(&self) -> ::protobuf::reflect::ProtobufValueRef {
+        ::protobuf::reflect::ProtobufValueRef::Message(self)
+    }
+}
+
+#[derive(PartialEq,Clone,Default)]
+pub struct ControlGraft {
+    // message fields
+    topicID: ::protobuf::SingularField<::std::string::String>,
+    // special fields
+    unknown_fields: ::protobuf::UnknownFields,
+    cached_size: ::protobuf::CachedSize,
+}
+
+impl ControlGraft {
+    pub fn new() -> ControlGraft {
+        ::std::default::Default::default()
+    }
+
+    // optional string topicID = 1;
+
+    pub fn clear_topicID(&mut self) {
+        self.topicID.clear();
+    }
+
+    pub fn has_topicID(&self) -> bool {
+        self.topicID.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_topicID(&mut self, v: ::std::string::String) {
+        self.topicID = ::protobuf::SingularField::some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_topicID(&mut self) -> &mut ::std::string::String {
+        if self.topicID.is_none() {
+            self.topicID.set_default();
+        }
+        self.topicID.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_topicID(&mut self) -> ::std::string::String {
+        self.topicID.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    pub fn get_topicID(&self) -> &str {
+        match self.topicID.as_ref() {
+            Some(v) => &v,
+            None => "",
+        }
+    }
+}
+
+impl ::protobuf::Message for ControlGraft {
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream) -> ::protobuf::ProtobufResult<()> {
+        while !is.eof()? {
+            let (field_number, wire_type) = is.read_tag_unpack()?;
+            match field_number {
+                1 => {
+                    ::protobuf::rt::read_singular_string_into(wire_type, is, &mut self.topicID)?;
+                },
+                _ => {
+                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u32 {
+        let mut my_size = 0;
+        if let Some(ref v) = self.topicID.as_ref() {
+            my_size += ::protobuf::rt::string_size(1, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
+        self.cached_size.set(my_size);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream) -> ::protobuf::ProtobufResult<()> {
+        if let Some(ref v) = self.topicID.as_ref() {
+            os.write_string(1, &v)?;
+        }
+        os.write_unknown_fields(self.get_unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn get_cached_size(&self) -> u32 {
+        self.cached_size.get()
+    }
+
+    fn get_unknown_fields(&self) -> &::protobuf::UnknownFields {
+        &self.unknown_fields
+    }
+
+    fn mut_unknown_fields(&mut self) -> &mut ::protobuf::UnknownFields {
+        &mut self.unknown_fields
+    }
+
+    fn as_any(&self) -> &::std::any::Any {
+        self as &::std::any::Any
+    }
+    fn as_any_mut(&mut self) -> &mut ::std::any::Any {
+        self as &mut ::std::any::Any
+    }
+    fn into_any(self: Box<Self>) -> ::std::boxed::Box<::std::any::Any> {
+        self
+    }
+
+    fn descriptor(&self) -> &'static ::protobuf::reflect::MessageDescriptor {
+        Self::descriptor_static()
+    }
+
+    fn new() -> ControlGraft {
+        ControlGraft::new()
+    }
+
+    fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
+        static mut descriptor: ::protobuf::lazy::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const ::protobuf::reflect::MessageDescriptor,
+        };
+        unsafe {
+            descriptor.get(|| {
+                let mut fields = ::std::vec::Vec::new();
+                fields.push(::protobuf::reflect::accessor::make_singular_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
+                    "topicID",
+                    |m: &ControlGraft| { &m.topicID },
+                    |m: &mut ControlGraft| { &mut m.topicID },
+                ));
+                ::protobuf::reflect::MessageDescriptor::new::<ControlGraft>(
+                    "ControlGraft",
+                    fields,
+                    file_descriptor_proto()
+                )
+            })
+        }
+    }
+
+    fn default_instance() -> &'static ControlGraft {
+        static mut instance: ::protobuf::lazy::Lazy<ControlGraft> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const ControlGraft,
+        };
+        unsafe {
+            instance.get(ControlGraft::new)
+        }
+    }
+}
+
+impl ::protobuf::Clear for ControlGraft {
+    fn clear(&mut self) {
+        self.clear_topicID();
+        self.unknown_fields.clear();
+    }
+}
+
+impl ::std::fmt::Debug for ControlGraft {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for ControlGraft {
+    fn as_ref(&self) -> ::protobuf::reflect::ProtobufValueRef {
+        ::protobuf::reflect::ProtobufValueRef::Message(self)
+    }
+}
+
+#[derive(PartialEq,Clone,Default)]
+pub struct ControlPrune {
+    // message fields
+    topicID: ::protobuf::SingularField<::std::string::String>,
+    // special fields
+    unknown_fields: ::protobuf::UnknownFields,
+    cached_size: ::protobuf::CachedSize,
+}
+
+impl ControlPrune {
+    pub fn new() -> ControlPrune {
+        ::std::default::Default::default()
+    }
+
+    // optional string topicID = 1;
+
+    pub fn clear_topicID(&mut self) {
+        self.topicID.clear();
+    }
+
+    pub fn has_topicID(&self) -> bool {
+        self.topicID.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_topicID(&mut self, v: ::std::string::String) {
+        self.topicID = ::protobuf::SingularField::some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_topicID(&mut self) -> &mut ::std::string::String {
+        if self.topicID.is_none() {
+            self.topicID.set_default();
+        }
+        self.topicID.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_topicID(&mut self) -> ::std::string::String {
+        self.topicID.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    pub fn get_topicID(&self) -> &str {
+        match self.topicID.as_ref() {
+            Some(v) => &v,
+            None => "",
+        }
+    }
+}
+
+impl ::protobuf::Message for ControlPrune {
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream) -> ::protobuf::ProtobufResult<()> {
+        while !is.eof()? {
+            let (field_number, wire_type) = is.read_tag_unpack()?;
+            match field_number {
+                1 => {
+                    ::protobuf::rt::read_singular_string_into(wire_type, is, &mut self.topicID)?;
+                },
+                _ => {
+                    ::protobuf::rt::read_unknown_or_skip_group(field_number, wire_type, is, self.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u32 {
+        let mut my_size = 0;
+        if let Some(ref v) = self.topicID.as_ref() {
+            my_size += ::protobuf::rt::string_size(1, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.get_unknown_fields());
+        self.cached_size.set(my_size);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream) -> ::protobuf::ProtobufResult<()> {
+        if let Some(ref v) = self.topicID.as_ref() {
+            os.write_string(1, &v)?;
+        }
+        os.write_unknown_fields(self.get_unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn get_cached_size(&self) -> u32 {
+        self.cached_size.get()
+    }
+
+    fn get_unknown_fields(&self) -> &::protobuf::UnknownFields {
+        &self.unknown_fields
+    }
+
+    fn mut_unknown_fields(&mut self) -> &mut ::protobuf::UnknownFields {
+        &mut self.unknown_fields
+    }
+
+    fn as_any(&self) -> &::std::any::Any {
+        self as &::std::any::Any
+    }
+    fn as_any_mut(&mut self) -> &mut ::std::any::Any {
+        self as &mut ::std::any::Any
+    }
+    fn into_any(self: Box<Self>) -> ::std::boxed::Box<::std::any::Any> {
+        self
+    }
+
+    fn descriptor(&self) -> &'static ::protobuf::reflect::MessageDescriptor {
+        Self::descriptor_static()
+    }
+
+    fn new() -> ControlPrune {
+        ControlPrune::new()
+    }
+
+    fn descriptor_static() -> &'static ::protobuf::reflect::MessageDescriptor {
+        static mut descriptor: ::protobuf::lazy::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const ::protobuf::reflect::MessageDescriptor,
+        };
+        unsafe {
+            descriptor.get(|| {
+                let mut fields = ::std::vec::Vec::new();
+                fields.push(::protobuf::reflect::accessor::make_singular_field_accessor::<_, ::protobuf::types::ProtobufTypeString>(
+                    "topicID",
+                    |m: &ControlPrune| { &m.topicID },
+                    |m: &mut ControlPrune| { &mut m.topicID },
+                ));
+                ::protobuf::reflect::MessageDescriptor::new::<ControlPrune>(
+                    "ControlPrune",
+                    fields,
+                    file_descriptor_proto()
+                )
+            })
+        }
+    }
+
+    fn default_instance() -> &'static ControlPrune {
+        static mut instance: ::protobuf::lazy::Lazy<ControlPrune> = ::protobuf::lazy::Lazy {
+            lock: ::protobuf::lazy::ONCE_INIT,
+            ptr: 0 as *const ControlPrune,
+        };
+        unsafe {
+            instance.get(ControlPrune::new)
+        }
+    }
+}
+
+impl ::protobuf::Clear for ControlPrune {
+    fn clear(&mut self) {
+        self.clear_topicID();
+        self.unknown_fields.clear();
+    }
+}
+
+impl ::std::fmt::Debug for ControlPrune {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for ControlPrune {
     fn as_ref(&self) -> ::protobuf::reflect::ProtobufValueRef {
         ::protobuf::reflect::ProtobufValueRef::Message(self)
     }
@@ -822,7 +2022,7 @@ impl TopicDescriptor {
         }
     }
 
-    // optional .floodsub.pb.TopicDescriptor.AuthOpts auth = 2;
+    // optional .gossipsub.pb.TopicDescriptor.AuthOpts auth = 2;
 
     pub fn clear_auth(&mut self) {
         self.auth.clear();
@@ -855,7 +2055,7 @@ impl TopicDescriptor {
         self.auth.as_ref().unwrap_or_else(|| TopicDescriptor_AuthOpts::default_instance())
     }
 
-    // optional .floodsub.pb.TopicDescriptor.EncOpts enc = 3;
+    // optional .gossipsub.pb.TopicDescriptor.EncOpts enc = 3;
 
     pub fn clear_enc(&mut self) {
         self.enc.clear();
@@ -1072,7 +2272,7 @@ impl TopicDescriptor_AuthOpts {
         ::std::default::Default::default()
     }
 
-    // optional .floodsub.pb.TopicDescriptor.AuthOpts.AuthMode mode = 1;
+    // optional .gossipsub.pb.TopicDescriptor.AuthOpts.AuthMode mode = 1;
 
     pub fn clear_mode(&mut self) {
         self.mode = ::std::option::Option::None;
@@ -1321,7 +2521,7 @@ impl TopicDescriptor_EncOpts {
         ::std::default::Default::default()
     }
 
-    // optional .floodsub.pb.TopicDescriptor.EncOpts.EncMode mode = 1;
+    // optional .gossipsub.pb.TopicDescriptor.EncOpts.EncMode mode = 1;
 
     pub fn clear_mode(&mut self) {
         self.mode = ::std::option::Option::None;
@@ -1556,113 +2756,165 @@ impl ::protobuf::reflect::ProtobufValue for TopicDescriptor_EncOpts_EncMode {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\trpc.proto\x12\x0bfloodsub.pb\"\xb8\x01\n\x03RPC\x12>\n\rsubscription\
-    s\x18\x01\x20\x03(\x0b2\x18.floodsub.pb.RPC.SubOptsR\rsubscriptions\x12.\
-    \n\x07publish\x18\x02\x20\x03(\x0b2\x14.floodsub.pb.MessageR\x07publish\
-    \x1aA\n\x07SubOpts\x12\x1c\n\tsubscribe\x18\x01\x20\x01(\x08R\tsubscribe\
-    \x12\x18\n\x07topicid\x18\x02\x20\x01(\tR\x07topicid\"c\n\x07Message\x12\
-    \x12\n\x04from\x18\x01\x20\x01(\x0cR\x04from\x12\x12\n\x04data\x18\x02\
-    \x20\x01(\x0cR\x04data\x12\x14\n\x05seqno\x18\x03\x20\x01(\x0cR\x05seqno\
-    \x12\x1a\n\x08topicIDs\x18\x04\x20\x03(\tR\x08topicIDs\"\xbe\x03\n\x0fTo\
-    picDescriptor\x12\x12\n\x04name\x18\x01\x20\x01(\tR\x04name\x129\n\x04au\
-    th\x18\x02\x20\x01(\x0b2%.floodsub.pb.TopicDescriptor.AuthOptsR\x04auth\
-    \x126\n\x03enc\x18\x03\x20\x01(\x0b2$.floodsub.pb.TopicDescriptor.EncOpt\
-    sR\x03enc\x1a\x8a\x01\n\x08AuthOpts\x12B\n\x04mode\x18\x01\x20\x01(\x0e2\
-    ..floodsub.pb.TopicDescriptor.AuthOpts.AuthModeR\x04mode\x12\x12\n\x04ke\
-    ys\x18\x02\x20\x03(\x0cR\x04keys\"&\n\x08AuthMode\x12\x08\n\x04NONE\x10\
-    \0\x12\x07\n\x03KEY\x10\x01\x12\x07\n\x03WOT\x10\x02\x1a\x96\x01\n\x07En\
-    cOpts\x12@\n\x04mode\x18\x01\x20\x01(\x0e2,.floodsub.pb.TopicDescriptor.\
-    EncOpts.EncModeR\x04mode\x12\x1c\n\tkeyHashes\x18\x02\x20\x03(\x0cR\tkey\
-    Hashes\"+\n\x07EncMode\x12\x08\n\x04NONE\x10\0\x12\r\n\tSHAREDKEY\x10\
-    \x01\x12\x07\n\x03WOT\x10\x02J\xc2\x10\n\x06\x12\x04\0\0.\x01\n\x08\n\
-    \x01\x02\x12\x03\0\x08\x13\n\n\n\x02\x04\0\x12\x04\x02\0\n\x01\n\n\n\x03\
-    \x04\0\x01\x12\x03\x02\x08\x0b\n\x0b\n\x04\x04\0\x02\0\x12\x03\x03\x08+\
-    \n\x0c\n\x05\x04\0\x02\0\x04\x12\x03\x03\x08\x10\n\x0c\n\x05\x04\0\x02\0\
-    \x06\x12\x03\x03\x11\x18\n\x0c\n\x05\x04\0\x02\0\x01\x12\x03\x03\x19&\n\
-    \x0c\n\x05\x04\0\x02\0\x03\x12\x03\x03)*\n\x0b\n\x04\x04\0\x02\x01\x12\
-    \x03\x04\x08%\n\x0c\n\x05\x04\0\x02\x01\x04\x12\x03\x04\x08\x10\n\x0c\n\
-    \x05\x04\0\x02\x01\x06\x12\x03\x04\x11\x18\n\x0c\n\x05\x04\0\x02\x01\x01\
-    \x12\x03\x04\x19\x20\n\x0c\n\x05\x04\0\x02\x01\x03\x12\x03\x04#$\n\x0c\n\
-    \x04\x04\0\x03\0\x12\x04\x06\x08\t\t\n\x0c\n\x05\x04\0\x03\0\x01\x12\x03\
-    \x06\x10\x17\n(\n\x06\x04\0\x03\0\x02\0\x12\x03\x07\x10,\"\x19\x20subscr\
-    ibe\x20or\x20unsubcribe\n\n\x0e\n\x07\x04\0\x03\0\x02\0\x04\x12\x03\x07\
-    \x10\x18\n\x0e\n\x07\x04\0\x03\0\x02\0\x05\x12\x03\x07\x19\x1d\n\x0e\n\
-    \x07\x04\0\x03\0\x02\0\x01\x12\x03\x07\x1e'\n\x0e\n\x07\x04\0\x03\0\x02\
-    \0\x03\x12\x03\x07*+\n\r\n\x06\x04\0\x03\0\x02\x01\x12\x03\x08\x10,\n\
-    \x0e\n\x07\x04\0\x03\0\x02\x01\x04\x12\x03\x08\x10\x18\n\x0e\n\x07\x04\0\
-    \x03\0\x02\x01\x05\x12\x03\x08\x19\x1f\n\x0e\n\x07\x04\0\x03\0\x02\x01\
-    \x01\x12\x03\x08\x20'\n\x0e\n\x07\x04\0\x03\0\x02\x01\x03\x12\x03\x08*+\
-    \n\n\n\x02\x04\x01\x12\x04\x0c\0\x11\x01\n\n\n\x03\x04\x01\x01\x12\x03\
-    \x0c\x08\x0f\n\x0b\n\x04\x04\x01\x02\0\x12\x03\r\x08\x20\n\x0c\n\x05\x04\
-    \x01\x02\0\x04\x12\x03\r\x08\x10\n\x0c\n\x05\x04\x01\x02\0\x05\x12\x03\r\
-    \x11\x16\n\x0c\n\x05\x04\x01\x02\0\x01\x12\x03\r\x17\x1b\n\x0c\n\x05\x04\
-    \x01\x02\0\x03\x12\x03\r\x1e\x1f\n\x0b\n\x04\x04\x01\x02\x01\x12\x03\x0e\
-    \x08\x20\n\x0c\n\x05\x04\x01\x02\x01\x04\x12\x03\x0e\x08\x10\n\x0c\n\x05\
-    \x04\x01\x02\x01\x05\x12\x03\x0e\x11\x16\n\x0c\n\x05\x04\x01\x02\x01\x01\
-    \x12\x03\x0e\x17\x1b\n\x0c\n\x05\x04\x01\x02\x01\x03\x12\x03\x0e\x1e\x1f\
-    \n\x0b\n\x04\x04\x01\x02\x02\x12\x03\x0f\x08!\n\x0c\n\x05\x04\x01\x02\
-    \x02\x04\x12\x03\x0f\x08\x10\n\x0c\n\x05\x04\x01\x02\x02\x05\x12\x03\x0f\
-    \x11\x16\n\x0c\n\x05\x04\x01\x02\x02\x01\x12\x03\x0f\x17\x1c\n\x0c\n\x05\
-    \x04\x01\x02\x02\x03\x12\x03\x0f\x1f\x20\n\x0b\n\x04\x04\x01\x02\x03\x12\
-    \x03\x10\x08%\n\x0c\n\x05\x04\x01\x02\x03\x04\x12\x03\x10\x08\x10\n\x0c\
-    \n\x05\x04\x01\x02\x03\x05\x12\x03\x10\x11\x17\n\x0c\n\x05\x04\x01\x02\
-    \x03\x01\x12\x03\x10\x18\x20\n\x0c\n\x05\x04\x01\x02\x03\x03\x12\x03\x10\
-    #$\nC\n\x02\x04\x02\x12\x04\x14\0.\x01\x1a7\x20topicID\x20=\x20hash(topi\
-    cDescriptor);\x20(not\x20the\x20topic.name)\n\n\n\n\x03\x04\x02\x01\x12\
-    \x03\x14\x08\x17\n\x0b\n\x04\x04\x02\x02\0\x12\x03\x15\x08!\n\x0c\n\x05\
-    \x04\x02\x02\0\x04\x12\x03\x15\x08\x10\n\x0c\n\x05\x04\x02\x02\0\x05\x12\
-    \x03\x15\x11\x17\n\x0c\n\x05\x04\x02\x02\0\x01\x12\x03\x15\x18\x1c\n\x0c\
-    \n\x05\x04\x02\x02\0\x03\x12\x03\x15\x1f\x20\n\x0b\n\x04\x04\x02\x02\x01\
-    \x12\x03\x16\x08#\n\x0c\n\x05\x04\x02\x02\x01\x04\x12\x03\x16\x08\x10\n\
-    \x0c\n\x05\x04\x02\x02\x01\x06\x12\x03\x16\x11\x19\n\x0c\n\x05\x04\x02\
-    \x02\x01\x01\x12\x03\x16\x1a\x1e\n\x0c\n\x05\x04\x02\x02\x01\x03\x12\x03\
-    \x16!\"\n\x0b\n\x04\x04\x02\x02\x02\x12\x03\x17\x08!\n\x0c\n\x05\x04\x02\
-    \x02\x02\x04\x12\x03\x17\x08\x10\n\x0c\n\x05\x04\x02\x02\x02\x06\x12\x03\
-    \x17\x11\x18\n\x0c\n\x05\x04\x02\x02\x02\x01\x12\x03\x17\x19\x1c\n\x0c\n\
-    \x05\x04\x02\x02\x02\x03\x12\x03\x17\x1f\x20\n\x0c\n\x04\x04\x02\x03\0\
-    \x12\x04\x19\x08\"\t\n\x0c\n\x05\x04\x02\x03\0\x01\x12\x03\x19\x10\x18\n\
-    \r\n\x06\x04\x02\x03\0\x02\0\x12\x03\x1a\x10+\n\x0e\n\x07\x04\x02\x03\0\
-    \x02\0\x04\x12\x03\x1a\x10\x18\n\x0e\n\x07\x04\x02\x03\0\x02\0\x06\x12\
-    \x03\x1a\x19!\n\x0e\n\x07\x04\x02\x03\0\x02\0\x01\x12\x03\x1a\"&\n\x0e\n\
-    \x07\x04\x02\x03\0\x02\0\x03\x12\x03\x1a)*\n#\n\x06\x04\x02\x03\0\x02\
-    \x01\x12\x03\x1b\x10(\"\x14\x20root\x20keys\x20to\x20trust\n\n\x0e\n\x07\
-    \x04\x02\x03\0\x02\x01\x04\x12\x03\x1b\x10\x18\n\x0e\n\x07\x04\x02\x03\0\
-    \x02\x01\x05\x12\x03\x1b\x19\x1e\n\x0e\n\x07\x04\x02\x03\0\x02\x01\x01\
-    \x12\x03\x1b\x1f#\n\x0e\n\x07\x04\x02\x03\0\x02\x01\x03\x12\x03\x1b&'\n\
-    \x0e\n\x06\x04\x02\x03\0\x04\0\x12\x04\x1d\x10!\x11\n\x0e\n\x07\x04\x02\
-    \x03\0\x04\0\x01\x12\x03\x1d\x15\x1d\n8\n\x08\x04\x02\x03\0\x04\0\x02\0\
-    \x12\x03\x1e\x18!\"'\x20no\x20authentication,\x20anyone\x20can\x20publis\
-    h\n\n\x10\n\t\x04\x02\x03\0\x04\0\x02\0\x01\x12\x03\x1e\x18\x1c\n\x10\n\
-    \t\x04\x02\x03\0\x04\0\x02\0\x02\x12\x03\x1e\x1f\x20\nT\n\x08\x04\x02\
-    \x03\0\x04\0\x02\x01\x12\x03\x1f\x18\x20\"C\x20only\x20messages\x20signe\
-    d\x20by\x20keys\x20in\x20the\x20topic\x20descriptor\x20are\x20accepted\n\
-    \n\x10\n\t\x04\x02\x03\0\x04\0\x02\x01\x01\x12\x03\x1f\x18\x1b\n\x10\n\t\
-    \x04\x02\x03\0\x04\0\x02\x01\x02\x12\x03\x1f\x1e\x1f\nM\n\x08\x04\x02\
-    \x03\0\x04\0\x02\x02\x12\x03\x20\x18\x20\"<\x20web\x20of\x20trust,\x20ce\
-    rtificates\x20can\x20allow\x20publisher\x20set\x20to\x20grow\n\n\x10\n\t\
-    \x04\x02\x03\0\x04\0\x02\x02\x01\x12\x03\x20\x18\x1b\n\x10\n\t\x04\x02\
-    \x03\0\x04\0\x02\x02\x02\x12\x03\x20\x1e\x1f\n\x0c\n\x04\x04\x02\x03\x01\
-    \x12\x04$\x08-\t\n\x0c\n\x05\x04\x02\x03\x01\x01\x12\x03$\x10\x17\n\r\n\
-    \x06\x04\x02\x03\x01\x02\0\x12\x03%\x10*\n\x0e\n\x07\x04\x02\x03\x01\x02\
-    \0\x04\x12\x03%\x10\x18\n\x0e\n\x07\x04\x02\x03\x01\x02\0\x06\x12\x03%\
-    \x19\x20\n\x0e\n\x07\x04\x02\x03\x01\x02\0\x01\x12\x03%!%\n\x0e\n\x07\
-    \x04\x02\x03\x01\x02\0\x03\x12\x03%()\n<\n\x06\x04\x02\x03\x01\x02\x01\
-    \x12\x03&\x10-\"-\x20the\x20hashes\x20of\x20the\x20shared\x20keys\x20use\
-    d\x20(salted)\n\n\x0e\n\x07\x04\x02\x03\x01\x02\x01\x04\x12\x03&\x10\x18\
-    \n\x0e\n\x07\x04\x02\x03\x01\x02\x01\x05\x12\x03&\x19\x1e\n\x0e\n\x07\
-    \x04\x02\x03\x01\x02\x01\x01\x12\x03&\x1f(\n\x0e\n\x07\x04\x02\x03\x01\
-    \x02\x01\x03\x12\x03&+,\n\x0e\n\x06\x04\x02\x03\x01\x04\0\x12\x04(\x10,\
-    \x11\n\x0e\n\x07\x04\x02\x03\x01\x04\0\x01\x12\x03(\x15\x1c\n1\n\x08\x04\
-    \x02\x03\x01\x04\0\x02\0\x12\x03)\x18!\"\x20\x20no\x20encryption,\x20any\
-    one\x20can\x20read\n\n\x10\n\t\x04\x02\x03\x01\x04\0\x02\0\x01\x12\x03)\
-    \x18\x1c\n\x10\n\t\x04\x02\x03\x01\x04\0\x02\0\x02\x12\x03)\x1f\x20\n9\n\
-    \x08\x04\x02\x03\x01\x04\0\x02\x01\x12\x03*\x18&\"(\x20messages\x20are\
-    \x20encrypted\x20with\x20shared\x20key\n\n\x10\n\t\x04\x02\x03\x01\x04\0\
-    \x02\x01\x01\x12\x03*\x18!\n\x10\n\t\x04\x02\x03\x01\x04\0\x02\x01\x02\
-    \x12\x03*$%\nM\n\x08\x04\x02\x03\x01\x04\0\x02\x02\x12\x03+\x18\x20\"<\
-    \x20web\x20of\x20trust,\x20certificates\x20can\x20allow\x20publisher\x20\
-    set\x20to\x20grow\n\n\x10\n\t\x04\x02\x03\x01\x04\0\x02\x02\x01\x12\x03+\
-    \x18\x1b\n\x10\n\t\x04\x02\x03\x01\x04\0\x02\x02\x02\x12\x03+\x1e\x1f\
+    \n\trpc.proto\x12\x0cgossipsub.pb\"\xbd\x01\n\x03RPC\x120\n\rsubscriptio\
+    ns\x18\x01\x20\x03(\x0b2\x19.gossipsub.pb.RPC.SubOpts\x12&\n\x07publish\
+    \x18\x02\x20\x03(\x0b2\x15.gossipsub.pb.Message\x12-\n\x07control\x18\
+    \x03\x20\x01(\x0b2\x1c.gossipsub.pb.ControlMessage\x1a-\n\x07SubOpts\x12\
+    \x11\n\tsubscribe\x18\x01\x20\x01(\x08\x12\x0f\n\x07topicid\x18\x02\x20\
+    \x01(\t\"f\n\x07Message\x12\x0c\n\x04from\x18\x01\x20\x01(\x0c\x12\x0c\n\
+    \x04data\x18\x02\x20\x01(\x0c\x12\r\n\x05seqno\x18\x03\x20\x01(\x0c\x12\
+    \x10\n\x08topicIDs\x18\x04\x20\x03(\t\x12\x11\n\tsignature\x18\x05\x20\
+    \x01(\x0c\x12\x0b\n\x03key\x18\x06\x20\x01(\x0c\"\xbc\x01\n\x0eControlMe\
+    ssage\x12)\n\x05ihave\x18\x01\x20\x03(\x0b2\x1a.gossipsub.pb.ControlIHav\
+    e\x12)\n\x05iwant\x18\x02\x20\x03(\x0b2\x1a.gossipsub.pb.ControlIWant\
+    \x12)\n\x05graft\x18\x03\x20\x03(\x0b2\x1a.gossipsub.pb.ControlGraft\x12\
+    )\n\x05prune\x18\x04\x20\x03(\x0b2\x1a.gossipsub.pb.ControlPrune\"3\n\
+    \x0cControlIHave\x12\x0f\n\x07topicID\x18\x01\x20\x01(\t\x12\x12\n\nmess\
+    ageIDs\x18\x02\x20\x03(\t\"\"\n\x0cControlIWant\x12\x12\n\nmessageIDs\
+    \x18\x01\x20\x03(\t\"\x1f\n\x0cControlGraft\x12\x0f\n\x07topicID\x18\x01\
+    \x20\x01(\t\"\x1f\n\x0cControlPrune\x12\x0f\n\x07topicID\x18\x01\x20\x01\
+    (\t\"\x93\x03\n\x0fTopicDescriptor\x12\x0c\n\x04name\x18\x01\x20\x01(\t\
+    \x124\n\x04auth\x18\x02\x20\x01(\x0b2&.gossipsub.pb.TopicDescriptor.Auth\
+    Opts\x122\n\x03enc\x18\x03\x20\x01(\x0b2%.gossipsub.pb.TopicDescriptor.E\
+    ncOpts\x1a\x7f\n\x08AuthOpts\x12=\n\x04mode\x18\x01\x20\x01(\x0e2/.gossi\
+    psub.pb.TopicDescriptor.AuthOpts.AuthMode\x12\x0c\n\x04keys\x18\x02\x20\
+    \x03(\x0c\"&\n\x08AuthMode\x12\x08\n\x04NONE\x10\0\x12\x07\n\x03KEY\x10\
+    \x01\x12\x07\n\x03WOT\x10\x02\x1a\x86\x01\n\x07EncOpts\x12;\n\x04mode\
+    \x18\x01\x20\x01(\x0e2-.gossipsub.pb.TopicDescriptor.EncOpts.EncMode\x12\
+    \x11\n\tkeyHashes\x18\x02\x20\x03(\x0c\"+\n\x07EncMode\x12\x08\n\x04NONE\
+    \x10\0\x12\r\n\tSHAREDKEY\x10\x01\x12\x07\n\x03WOT\x10\x02J\xbd\x17\n\
+    \x06\x12\x04\x03\0N\x01\n\x08\n\x01\x02\x12\x03\x05\x08\x14\n\n\n\x02\
+    \x04\0\x12\x04\x07\0\x11\x01\n\n\n\x03\x04\0\x01\x12\x03\x07\x08\x0b\n\
+    \x0b\n\x04\x04\0\x02\0\x12\x03\x08\x08+\n\x0c\n\x05\x04\0\x02\0\x04\x12\
+    \x03\x08\x08\x10\n\x0c\n\x05\x04\0\x02\0\x06\x12\x03\x08\x11\x18\n\x0c\n\
+    \x05\x04\0\x02\0\x01\x12\x03\x08\x19&\n\x0c\n\x05\x04\0\x02\0\x03\x12\
+    \x03\x08)*\n\x0b\n\x04\x04\0\x02\x01\x12\x03\t\x08%\n\x0c\n\x05\x04\0\
+    \x02\x01\x04\x12\x03\t\x08\x10\n\x0c\n\x05\x04\0\x02\x01\x06\x12\x03\t\
+    \x11\x18\n\x0c\n\x05\x04\0\x02\x01\x01\x12\x03\t\x19\x20\n\x0c\n\x05\x04\
+    \0\x02\x01\x03\x12\x03\t#$\n\x0c\n\x04\x04\0\x03\0\x12\x04\x0b\x08\x0e\t\
+    \n\x0c\n\x05\x04\0\x03\0\x01\x12\x03\x0b\x10\x17\n(\n\x06\x04\0\x03\0\
+    \x02\0\x12\x03\x0c\x10,\"\x19\x20subscribe\x20or\x20unsubcribe\n\n\x0e\n\
+    \x07\x04\0\x03\0\x02\0\x04\x12\x03\x0c\x10\x18\n\x0e\n\x07\x04\0\x03\0\
+    \x02\0\x05\x12\x03\x0c\x19\x1d\n\x0e\n\x07\x04\0\x03\0\x02\0\x01\x12\x03\
+    \x0c\x1e'\n\x0e\n\x07\x04\0\x03\0\x02\0\x03\x12\x03\x0c*+\n\r\n\x06\x04\
+    \0\x03\0\x02\x01\x12\x03\r\x10,\n\x0e\n\x07\x04\0\x03\0\x02\x01\x04\x12\
+    \x03\r\x10\x18\n\x0e\n\x07\x04\0\x03\0\x02\x01\x05\x12\x03\r\x19\x1f\n\
+    \x0e\n\x07\x04\0\x03\0\x02\x01\x01\x12\x03\r\x20'\n\x0e\n\x07\x04\0\x03\
+    \0\x02\x01\x03\x12\x03\r*+\n\x0b\n\x04\x04\0\x02\x02\x12\x03\x10\x08,\n\
+    \x0c\n\x05\x04\0\x02\x02\x04\x12\x03\x10\x08\x10\n\x0c\n\x05\x04\0\x02\
+    \x02\x06\x12\x03\x10\x11\x1f\n\x0c\n\x05\x04\0\x02\x02\x01\x12\x03\x10\
+    \x20'\n\x0c\n\x05\x04\0\x02\x02\x03\x12\x03\x10*+\n\n\n\x02\x04\x01\x12\
+    \x04\x13\0\x1a\x01\n\n\n\x03\x04\x01\x01\x12\x03\x13\x08\x0f\n\x0b\n\x04\
+    \x04\x01\x02\0\x12\x03\x14\x08\x20\n\x0c\n\x05\x04\x01\x02\0\x04\x12\x03\
+    \x14\x08\x10\n\x0c\n\x05\x04\x01\x02\0\x05\x12\x03\x14\x11\x16\n\x0c\n\
+    \x05\x04\x01\x02\0\x01\x12\x03\x14\x17\x1b\n\x0c\n\x05\x04\x01\x02\0\x03\
+    \x12\x03\x14\x1e\x1f\n\x0b\n\x04\x04\x01\x02\x01\x12\x03\x15\x08\x20\n\
+    \x0c\n\x05\x04\x01\x02\x01\x04\x12\x03\x15\x08\x10\n\x0c\n\x05\x04\x01\
+    \x02\x01\x05\x12\x03\x15\x11\x16\n\x0c\n\x05\x04\x01\x02\x01\x01\x12\x03\
+    \x15\x17\x1b\n\x0c\n\x05\x04\x01\x02\x01\x03\x12\x03\x15\x1e\x1f\n\x0b\n\
+    \x04\x04\x01\x02\x02\x12\x03\x16\x08!\n\x0c\n\x05\x04\x01\x02\x02\x04\
+    \x12\x03\x16\x08\x10\n\x0c\n\x05\x04\x01\x02\x02\x05\x12\x03\x16\x11\x16\
+    \n\x0c\n\x05\x04\x01\x02\x02\x01\x12\x03\x16\x17\x1c\n\x0c\n\x05\x04\x01\
+    \x02\x02\x03\x12\x03\x16\x1f\x20\n\x0b\n\x04\x04\x01\x02\x03\x12\x03\x17\
+    \x08%\n\x0c\n\x05\x04\x01\x02\x03\x04\x12\x03\x17\x08\x10\n\x0c\n\x05\
+    \x04\x01\x02\x03\x05\x12\x03\x17\x11\x17\n\x0c\n\x05\x04\x01\x02\x03\x01\
+    \x12\x03\x17\x18\x20\n\x0c\n\x05\x04\x01\x02\x03\x03\x12\x03\x17#$\n\x0b\
+    \n\x04\x04\x01\x02\x04\x12\x03\x18\x08%\n\x0c\n\x05\x04\x01\x02\x04\x04\
+    \x12\x03\x18\x08\x10\n\x0c\n\x05\x04\x01\x02\x04\x05\x12\x03\x18\x11\x16\
+    \n\x0c\n\x05\x04\x01\x02\x04\x01\x12\x03\x18\x17\x20\n\x0c\n\x05\x04\x01\
+    \x02\x04\x03\x12\x03\x18#$\n\x0b\n\x04\x04\x01\x02\x05\x12\x03\x19\x08\
+    \x1f\n\x0c\n\x05\x04\x01\x02\x05\x04\x12\x03\x19\x08\x10\n\x0c\n\x05\x04\
+    \x01\x02\x05\x05\x12\x03\x19\x11\x16\n\x0c\n\x05\x04\x01\x02\x05\x01\x12\
+    \x03\x19\x17\x1a\n\x0c\n\x05\x04\x01\x02\x05\x03\x12\x03\x19\x1d\x1e\n\n\
+    \n\x02\x04\x02\x12\x04\x1c\0!\x01\n\n\n\x03\x04\x02\x01\x12\x03\x1c\x08\
+    \x16\n\x0b\n\x04\x04\x02\x02\0\x12\x03\x1d\x08(\n\x0c\n\x05\x04\x02\x02\
+    \0\x04\x12\x03\x1d\x08\x10\n\x0c\n\x05\x04\x02\x02\0\x06\x12\x03\x1d\x11\
+    \x1d\n\x0c\n\x05\x04\x02\x02\0\x01\x12\x03\x1d\x1e#\n\x0c\n\x05\x04\x02\
+    \x02\0\x03\x12\x03\x1d&'\n\x0b\n\x04\x04\x02\x02\x01\x12\x03\x1e\x08(\n\
+    \x0c\n\x05\x04\x02\x02\x01\x04\x12\x03\x1e\x08\x10\n\x0c\n\x05\x04\x02\
+    \x02\x01\x06\x12\x03\x1e\x11\x1d\n\x0c\n\x05\x04\x02\x02\x01\x01\x12\x03\
+    \x1e\x1e#\n\x0c\n\x05\x04\x02\x02\x01\x03\x12\x03\x1e&'\n\x0b\n\x04\x04\
+    \x02\x02\x02\x12\x03\x1f\x08(\n\x0c\n\x05\x04\x02\x02\x02\x04\x12\x03\
+    \x1f\x08\x10\n\x0c\n\x05\x04\x02\x02\x02\x06\x12\x03\x1f\x11\x1d\n\x0c\n\
+    \x05\x04\x02\x02\x02\x01\x12\x03\x1f\x1e#\n\x0c\n\x05\x04\x02\x02\x02\
+    \x03\x12\x03\x1f&'\n\x0b\n\x04\x04\x02\x02\x03\x12\x03\x20\x08(\n\x0c\n\
+    \x05\x04\x02\x02\x03\x04\x12\x03\x20\x08\x10\n\x0c\n\x05\x04\x02\x02\x03\
+    \x06\x12\x03\x20\x11\x1d\n\x0c\n\x05\x04\x02\x02\x03\x01\x12\x03\x20\x1e\
+    #\n\x0c\n\x05\x04\x02\x02\x03\x03\x12\x03\x20&'\n\n\n\x02\x04\x03\x12\
+    \x04#\0&\x01\n\n\n\x03\x04\x03\x01\x12\x03#\x08\x14\n\x0b\n\x04\x04\x03\
+    \x02\0\x12\x03$\x08$\n\x0c\n\x05\x04\x03\x02\0\x04\x12\x03$\x08\x10\n\
+    \x0c\n\x05\x04\x03\x02\0\x05\x12\x03$\x11\x17\n\x0c\n\x05\x04\x03\x02\0\
+    \x01\x12\x03$\x18\x1f\n\x0c\n\x05\x04\x03\x02\0\x03\x12\x03$\"#\n\x0b\n\
+    \x04\x04\x03\x02\x01\x12\x03%\x08'\n\x0c\n\x05\x04\x03\x02\x01\x04\x12\
+    \x03%\x08\x10\n\x0c\n\x05\x04\x03\x02\x01\x05\x12\x03%\x11\x17\n\x0c\n\
+    \x05\x04\x03\x02\x01\x01\x12\x03%\x18\"\n\x0c\n\x05\x04\x03\x02\x01\x03\
+    \x12\x03%%&\n\n\n\x02\x04\x04\x12\x04(\0*\x01\n\n\n\x03\x04\x04\x01\x12\
+    \x03(\x08\x14\n\x0b\n\x04\x04\x04\x02\0\x12\x03)\x08'\n\x0c\n\x05\x04\
+    \x04\x02\0\x04\x12\x03)\x08\x10\n\x0c\n\x05\x04\x04\x02\0\x05\x12\x03)\
+    \x11\x17\n\x0c\n\x05\x04\x04\x02\0\x01\x12\x03)\x18\"\n\x0c\n\x05\x04\
+    \x04\x02\0\x03\x12\x03)%&\n\n\n\x02\x04\x05\x12\x04,\0.\x01\n\n\n\x03\
+    \x04\x05\x01\x12\x03,\x08\x14\n\x0b\n\x04\x04\x05\x02\0\x12\x03-\x08$\n\
+    \x0c\n\x05\x04\x05\x02\0\x04\x12\x03-\x08\x10\n\x0c\n\x05\x04\x05\x02\0\
+    \x05\x12\x03-\x11\x17\n\x0c\n\x05\x04\x05\x02\0\x01\x12\x03-\x18\x1f\n\
+    \x0c\n\x05\x04\x05\x02\0\x03\x12\x03-\"#\n\n\n\x02\x04\x06\x12\x040\02\
+    \x01\n\n\n\x03\x04\x06\x01\x12\x030\x08\x14\n\x0b\n\x04\x04\x06\x02\0\
+    \x12\x031\x08$\n\x0c\n\x05\x04\x06\x02\0\x04\x12\x031\x08\x10\n\x0c\n\
+    \x05\x04\x06\x02\0\x05\x12\x031\x11\x17\n\x0c\n\x05\x04\x06\x02\0\x01\
+    \x12\x031\x18\x1f\n\x0c\n\x05\x04\x06\x02\0\x03\x12\x031\"#\n\n\n\x02\
+    \x04\x07\x12\x044\0N\x01\n\n\n\x03\x04\x07\x01\x12\x034\x08\x17\n\x0b\n\
+    \x04\x04\x07\x02\0\x12\x035\x08!\n\x0c\n\x05\x04\x07\x02\0\x04\x12\x035\
+    \x08\x10\n\x0c\n\x05\x04\x07\x02\0\x05\x12\x035\x11\x17\n\x0c\n\x05\x04\
+    \x07\x02\0\x01\x12\x035\x18\x1c\n\x0c\n\x05\x04\x07\x02\0\x03\x12\x035\
+    \x1f\x20\n\x0b\n\x04\x04\x07\x02\x01\x12\x036\x08#\n\x0c\n\x05\x04\x07\
+    \x02\x01\x04\x12\x036\x08\x10\n\x0c\n\x05\x04\x07\x02\x01\x06\x12\x036\
+    \x11\x19\n\x0c\n\x05\x04\x07\x02\x01\x01\x12\x036\x1a\x1e\n\x0c\n\x05\
+    \x04\x07\x02\x01\x03\x12\x036!\"\n\x0b\n\x04\x04\x07\x02\x02\x12\x037\
+    \x08!\n\x0c\n\x05\x04\x07\x02\x02\x04\x12\x037\x08\x10\n\x0c\n\x05\x04\
+    \x07\x02\x02\x06\x12\x037\x11\x18\n\x0c\n\x05\x04\x07\x02\x02\x01\x12\
+    \x037\x19\x1c\n\x0c\n\x05\x04\x07\x02\x02\x03\x12\x037\x1f\x20\n\x0c\n\
+    \x04\x04\x07\x03\0\x12\x049\x08B\t\n\x0c\n\x05\x04\x07\x03\0\x01\x12\x03\
+    9\x10\x18\n\r\n\x06\x04\x07\x03\0\x02\0\x12\x03:\x10+\n\x0e\n\x07\x04\
+    \x07\x03\0\x02\0\x04\x12\x03:\x10\x18\n\x0e\n\x07\x04\x07\x03\0\x02\0\
+    \x06\x12\x03:\x19!\n\x0e\n\x07\x04\x07\x03\0\x02\0\x01\x12\x03:\"&\n\x0e\
+    \n\x07\x04\x07\x03\0\x02\0\x03\x12\x03:)*\n#\n\x06\x04\x07\x03\0\x02\x01\
+    \x12\x03;\x10(\"\x14\x20root\x20keys\x20to\x20trust\n\n\x0e\n\x07\x04\
+    \x07\x03\0\x02\x01\x04\x12\x03;\x10\x18\n\x0e\n\x07\x04\x07\x03\0\x02\
+    \x01\x05\x12\x03;\x19\x1e\n\x0e\n\x07\x04\x07\x03\0\x02\x01\x01\x12\x03;\
+    \x1f#\n\x0e\n\x07\x04\x07\x03\0\x02\x01\x03\x12\x03;&'\n\x0e\n\x06\x04\
+    \x07\x03\0\x04\0\x12\x04=\x10A\x11\n\x0e\n\x07\x04\x07\x03\0\x04\0\x01\
+    \x12\x03=\x15\x1d\n8\n\x08\x04\x07\x03\0\x04\0\x02\0\x12\x03>\x18!\"'\
+    \x20no\x20authentication,\x20anyone\x20can\x20publish\n\n\x10\n\t\x04\
+    \x07\x03\0\x04\0\x02\0\x01\x12\x03>\x18\x1c\n\x10\n\t\x04\x07\x03\0\x04\
+    \0\x02\0\x02\x12\x03>\x1f\x20\nT\n\x08\x04\x07\x03\0\x04\0\x02\x01\x12\
+    \x03?\x18\x20\"C\x20only\x20messages\x20signed\x20by\x20keys\x20in\x20th\
+    e\x20topic\x20descriptor\x20are\x20accepted\n\n\x10\n\t\x04\x07\x03\0\
+    \x04\0\x02\x01\x01\x12\x03?\x18\x1b\n\x10\n\t\x04\x07\x03\0\x04\0\x02\
+    \x01\x02\x12\x03?\x1e\x1f\nM\n\x08\x04\x07\x03\0\x04\0\x02\x02\x12\x03@\
+    \x18\x20\"<\x20web\x20of\x20trust,\x20certificates\x20can\x20allow\x20pu\
+    blisher\x20set\x20to\x20grow\n\n\x10\n\t\x04\x07\x03\0\x04\0\x02\x02\x01\
+    \x12\x03@\x18\x1b\n\x10\n\t\x04\x07\x03\0\x04\0\x02\x02\x02\x12\x03@\x1e\
+    \x1f\n\x0c\n\x04\x04\x07\x03\x01\x12\x04D\x08M\t\n\x0c\n\x05\x04\x07\x03\
+    \x01\x01\x12\x03D\x10\x17\n\r\n\x06\x04\x07\x03\x01\x02\0\x12\x03E\x10*\
+    \n\x0e\n\x07\x04\x07\x03\x01\x02\0\x04\x12\x03E\x10\x18\n\x0e\n\x07\x04\
+    \x07\x03\x01\x02\0\x06\x12\x03E\x19\x20\n\x0e\n\x07\x04\x07\x03\x01\x02\
+    \0\x01\x12\x03E!%\n\x0e\n\x07\x04\x07\x03\x01\x02\0\x03\x12\x03E()\n<\n\
+    \x06\x04\x07\x03\x01\x02\x01\x12\x03F\x10-\"-\x20the\x20hashes\x20of\x20\
+    the\x20shared\x20keys\x20used\x20(salted)\n\n\x0e\n\x07\x04\x07\x03\x01\
+    \x02\x01\x04\x12\x03F\x10\x18\n\x0e\n\x07\x04\x07\x03\x01\x02\x01\x05\
+    \x12\x03F\x19\x1e\n\x0e\n\x07\x04\x07\x03\x01\x02\x01\x01\x12\x03F\x1f(\
+    \n\x0e\n\x07\x04\x07\x03\x01\x02\x01\x03\x12\x03F+,\n\x0e\n\x06\x04\x07\
+    \x03\x01\x04\0\x12\x04H\x10L\x11\n\x0e\n\x07\x04\x07\x03\x01\x04\0\x01\
+    \x12\x03H\x15\x1c\n1\n\x08\x04\x07\x03\x01\x04\0\x02\0\x12\x03I\x18!\"\
+    \x20\x20no\x20encryption,\x20anyone\x20can\x20read\n\n\x10\n\t\x04\x07\
+    \x03\x01\x04\0\x02\0\x01\x12\x03I\x18\x1c\n\x10\n\t\x04\x07\x03\x01\x04\
+    \0\x02\0\x02\x12\x03I\x1f\x20\n9\n\x08\x04\x07\x03\x01\x04\0\x02\x01\x12\
+    \x03J\x18&\"(\x20messages\x20are\x20encrypted\x20with\x20shared\x20key\n\
+    \n\x10\n\t\x04\x07\x03\x01\x04\0\x02\x01\x01\x12\x03J\x18!\n\x10\n\t\x04\
+    \x07\x03\x01\x04\0\x02\x01\x02\x12\x03J$%\nM\n\x08\x04\x07\x03\x01\x04\0\
+    \x02\x02\x12\x03K\x18\x20\"<\x20web\x20of\x20trust,\x20certificates\x20c\
+    an\x20allow\x20publisher\x20set\x20to\x20grow\n\n\x10\n\t\x04\x07\x03\
+    \x01\x04\0\x02\x02\x01\x12\x03K\x18\x1b\n\x10\n\t\x04\x07\x03\x01\x04\0\
+    \x02\x02\x02\x12\x03K\x1e\x1f\
 ";
 
 static mut file_descriptor_proto_lazy: ::protobuf::lazy::Lazy<::protobuf::descriptor::FileDescriptorProto> = ::protobuf::lazy::Lazy {

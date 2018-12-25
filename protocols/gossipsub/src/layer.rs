@@ -41,7 +41,7 @@ pub struct Gossipsub<TSubstream> {
     local_peer_id: PeerId,
 
     /// List of peers the network is connected to, and the topics that they're subscribed to.
-    // TODO: filter out peers that don't support floodsub, so that we avoid hammering them with
+    // TODO: filter out peers that don't support gossipsub, so that we avoid hammering them with
     //       opened substreams
     connected_peers: HashMap<PeerId, SmallVec<[TopicHash; 8]>>,
 
@@ -55,6 +55,20 @@ pub struct Gossipsub<TSubstream> {
 
     /// Marker to pin the generics.
     marker: PhantomData<TSubstream>,
+
+    // the overlay meshes as a map of topics to lists of peers
+    mesh: Mesh,
+
+    // the mesh peers to which we are publishing to without topic membership, as a map of topics to
+    // lists of peers
+    fanout: Mesh,
+
+    // protocol has but no need in Rust implementation, for it is the same as mcache
+    // seen: MessageCache,
+
+    // a message cache that contains the messages for the last few heartbeat ticks
+    mcache: MessageCache,
+
 }
 
 impl<TSubstream> Gossipsub<TSubstream> {
