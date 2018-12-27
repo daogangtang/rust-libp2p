@@ -176,68 +176,55 @@ impl<TSubstream> Gossipsub<TSubstream> {
 
         // check topic peer list in self.mesh if is empty, if empty try to collect it from
         // connected_peers
-        // TODO: use hashmap.entry().or_insert();
-        let peers = match self.mesh.get(topic) {
-            Some(a_peers) => {
-                let mut new_peers;
-                if a_peers.len() == 0 {
-                    new_peers = vec![];
-                    for (peer_id, sub_topic) in self.connected_peers.iter() {
-                        if sub_topic.iter().any(|t| topic == t)) {
-                            new_peers.push(peer_id);
-                        }
-                    }
+        let mut mesh_peers = match self.mesh.entry(topic).or_insert(vec![]);
+        if mesh_peers.len() == 0 {
+            for (peer_id, sub_topic) in self.connected_peers.iter() {
+                if sub_topic.iter().any(|t| topic == t)) {
+                    mesh_peers.push(peer_id);
+                    // TODO: when form mesh peers in this topic, we need to inform those peers to
+                    // execute ControlGraft to add this peer to its mesh overlay
                 }
-                else {
-                    new_peers = a_peers;
-                }
-
-                // TODO: then random select some items from new_peers to form mesh peers
-                // using TARGET_MESH_DEGREE, use shuffle here
-                //let mesh_peers = ....;
-
-                // TODO: when form mesh peers in this topic, we need to inform those peers to
-                // execute ControlGraft to add this peer to its mesh overlay
-
-                // TODO: then need to random select a subset of left peers in mesh
-                // and send gossip msg to them, call them to request msg cache from me
-                // current now do this in this stupid way, this can not reduce the payload of
-                // network, we should place this to other chances such as heartbeat time to
-                // make msg
-
-                mesh_peers
-            },
-            None => {
-                self.mesh.insert(topic, vec![]);
-                let mut new_peers = vec![];
-                for (peer_id, sub_topic) in self.connected_peers.iter() {
-                    if sub_topic.iter().any(|t| topic == t)) {
-                        new_peers.push(peer_id);
-                    }
-                }
-
-                // then random select some items from new_peers to form mesh peers
-                // using TARGET_MESH_DEGREE
-                //let mesh_peers = ....;
-
-                mesh_peers
             }
-
         }
 
+        // TODO: then random select some items from new_peers to form mesh peers
+        // using TARGET_MESH_DEGREE, use shuffle here this need to introduce rand::seq::SliceRandom
+        mesh_peers.shuffle();
+        let msg_send_peers = &mesh_peers[0..TARGET_MESH_DEGREE];
+        let left_peers = &mesh_peers[TARGET_MESH_DEGREE..];
+
+        // TODO: then need to random select a subset of left peers in mesh
+        // and send gossip msg to them, call them to request msg cache from me
+        // current now do this in this stupid way, this can not reduce the payload of
+        // network, we should place this to other chances such as heartbeat time to
+        // make msg
+        let gossip_send_peers = left_peers.choose_multiple(rng, GOSSIP_MESH_LEN);
+
         // Send to peers we know are subscribed to the topic.
-        for peer_id in peers.iter() {
+        for peer_id in msg_send_peers.iter() {
             self.events.push_back(NetworkBehaviourAction::SendEvent {
                 peer_id: peer_id.clone(),
                 event: GossipsubRpc {
                     subscriptions: Vec::new(),
                     messages: vec![message.clone()],
+                    controls: Vec::new()
                 }
             });
         }
 
         // TODO: send gossip to left peers subscribed this topic but not in mesh
         // IHAVE
+        let cached_msg_ids = ...;
+        for peer_id in gossip_send_peers.iter() {
+            self.events.push_back(NetworkBehaviourAction::SendEvent {
+                peer_id: peer_id.clone(),
+                event: GossipsubRpc {
+                    subscriptions: Vec::new(),
+                    messages: Vec::new(),
+                    controls: vec![GossipsubControl::IHAVE(cached_msg_ids)]
+                }
+            });
+        }
 
     }
 
