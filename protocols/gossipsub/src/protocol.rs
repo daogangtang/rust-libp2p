@@ -182,6 +182,8 @@ pub struct GossipsubRpc {
     pub messages: Vec<GossipsubMessage>,
     /// List of subscriptions.
     pub subscriptions: Vec<GossipsubSubscription>,
+    /// List of control messages that were part of this RPC query.
+    pub controls: Vec<GossipsubControl>,
 }
 
 /// A message received by the floodsub system.
@@ -202,7 +204,7 @@ pub struct GossipsubMessage {
     pub topics: Vec<TopicHash>,
 }
 
-/// A subscription received by the floodsub system.
+/// A subscription received by the gossipsub system.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct GossipsubSubscription {
     /// Action to perform.
@@ -218,4 +220,16 @@ pub enum GossipsubSubscriptionAction {
     Subscribe,
     /// The remote wants to unsubscribe from the given topic.
     Unsubscribe,
+}
+
+/// A control received by the gossipsub system.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum GossipsubControl {
+    ControlGraft(TopicHash),
+    ControlPrune(TopicHash),
+    ControlIHave {
+        topic: TopicHash,
+        msgids: Vec<MessageId>
+    },
+    ControlIWant(Vec<MessageId>),
 }

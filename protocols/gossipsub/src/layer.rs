@@ -113,6 +113,10 @@ impl<TSubstream> Gossipsub<TSubstream> {
         }
 
         self.subscribed_topics.push(topic);
+
+        // TODO: send ControlGraft to other peers in the mesh overlay
+
+
         true
     }
 
@@ -143,6 +147,9 @@ impl<TSubstream> Gossipsub<TSubstream> {
             });
         }
 
+        // TODO: send ControlPrune to other peers in the mesh overlay
+
+
         true
     }
 
@@ -167,7 +174,7 @@ impl<TSubstream> Gossipsub<TSubstream> {
 
         self.received.add(&message);
 
-        // check topic peer list in self.mesh if is empty, if empty try to collect it from 
+        // check topic peer list in self.mesh if is empty, if empty try to collect it from
         // connected_peers
         // TODO: use hashmap.entry().or_insert();
         let peers = match self.mesh.get(topic) {
@@ -184,10 +191,19 @@ impl<TSubstream> Gossipsub<TSubstream> {
                 else {
                     new_peers = a_peers;
                 }
-                
-                // then random select some items from new_peers to form mesh peers
-                // using TARGET_MESH_DEGREE
+
+                // TODO: then random select some items from new_peers to form mesh peers
+                // using TARGET_MESH_DEGREE, use shuffle here
                 //let mesh_peers = ....;
+
+                // TODO: when form mesh peers in this topic, we need to inform those peers to
+                // execute ControlGraft to add this peer to its mesh overlay
+
+                // TODO: then need to random select a subset of left peers in mesh
+                // and send gossip msg to them, call them to request msg cache from me
+                // current now do this in this stupid way, this can not reduce the payload of
+                // network, we should place this to other chances such as heartbeat time to
+                // make msg
 
                 mesh_peers
             },
@@ -206,7 +222,7 @@ impl<TSubstream> Gossipsub<TSubstream> {
 
                 mesh_peers
             }
-        
+
         }
 
         // Send to peers we know are subscribed to the topic.
@@ -219,6 +235,10 @@ impl<TSubstream> Gossipsub<TSubstream> {
                 }
             });
         }
+
+        // TODO: send gossip to left peers subscribed this topic but not in mesh
+        // IHAVE
+
     }
 
 }
@@ -296,7 +316,9 @@ where
                 self.events.push_back(NetworkBehaviourAction::GenerateEvent(message.clone()));
             }
 
-            // Propagate the message to everyone else who is subscribed to any of the topics.
+            // Propagate the message to everyone else who is subscribed to the topic in mesh
+            // TODO: careful, not every msg we choose different random peers, this should only
+            // be made once to form mesh content, if mesh has valid content, use it directly
             for (peer_id, subscr_topics) in self.connected_peers.iter() {
                 if peer_id == &propagation_source {
                     continue;
@@ -322,6 +344,18 @@ where
                 peer_id,
                 event: rpc,
             });
+        }
+
+        // TODO: add control msg flow here
+        for control_msg in event.controls {
+
+            // process Graft
+
+            // process Prune
+
+            // process IHAVE
+
+            // process IWANT
         }
     }
 
