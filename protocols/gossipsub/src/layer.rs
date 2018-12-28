@@ -23,14 +23,17 @@ use futures::prelude::*;
 use handler::GossipsubHandler;
 use libp2p_core::swarm::{ConnectedPoint, NetworkBehaviour, NetworkBehaviourAction, PollParameters};
 use libp2p_core::{protocols_handler::ProtocolsHandler, PeerId};
-use protocol::{GossipsubMessage, GossipsubRpc, GossipsubSubscription, GossipsubSubscriptionAction};
-use rand;
+use protocol::{GossipsubMessage, GossipsubRpc, GossipsubSubscription, GossipsubSubscriptionAction,
+                GossipsubControl};
 use smallvec::SmallVec;
 use std::{collections::VecDeque, iter, marker::PhantomData};
 use std::collections::hash_map::{DefaultHasher, HashMap};
 use tokio_io::{AsyncRead, AsyncWrite};
 use topic::{Topic, TopicHash};
 
+use rand;
+use rand::seq::SliceRandom;
+use rand::thread_rng;
 
 pub type Mesh = HashMap<TopicHash, Vec<PeerId>>;
 
@@ -108,14 +111,13 @@ impl<TSubstream> Gossipsub<TSubstream> {
                         topic: topic.hash().clone(),
                         action: GossipsubSubscriptionAction::Subscribe,
                     }],
+                    // TODO: send ControlGraft to other peers in the mesh overlay
+                    controls: vec![GossipsubControl::Graft(self.local_peer_id)],
                 },
             });
         }
 
         self.subscribed_topics.push(topic);
-
-        // TODO: send ControlGraft to other peers in the mesh overlay
-
 
         true
     }
@@ -143,6 +145,7 @@ impl<TSubstream> Gossipsub<TSubstream> {
                         topic: topic.clone(),
                         action: GossipsubSubscriptionAction::Unsubscribe,
                     }],
+                    controls: vec![GossipsubControl::Prune(self.local_peer_id)],
                 },
             });
         }
@@ -183,6 +186,14 @@ impl<TSubstream> Gossipsub<TSubstream> {
                     mesh_peers.push(peer_id);
                     // TODO: when form mesh peers in this topic, we need to inform those peers to
                     // execute ControlGraft to add this peer to its mesh overlay
+                    self.events.push_back(NetworkBehaviourAction::SendEvent {
+                        peer_id: peer_id.clone(),
+                        event: GossipsubRpc {
+                            subscriptions: Vec::new(),
+                            messages: Vec::new(),
+                            controls: vec![GossipsubControl::Graft(self.local_peer_id)]
+                        }
+                    });
                 }
             }
         }
@@ -190,15 +201,15 @@ impl<TSubstream> Gossipsub<TSubstream> {
         // TODO: then random select some items from new_peers to form mesh peers
         // using TARGET_MESH_DEGREE, use shuffle here this need to introduce rand::seq::SliceRandom
         mesh_peers.shuffle();
-        let msg_send_peers = &mesh_peers[0..TARGET_MESH_DEGREE];
-        let left_peers = &mesh_peers[TARGET_MESH_DEGREE..];
+        let msg_send_peers = &mesh_peers[0..constants::TARGET_MESH_DEGREE];
+        let left_peers = &mesh_peers[constants::TARGET_MESH_DEGREE..];
 
         // TODO: then need to random select a subset of left peers in mesh
         // and send gossip msg to them, call them to request msg cache from me
         // current now do this in this stupid way, this can not reduce the payload of
         // network, we should place this to other chances such as heartbeat time to
         // make msg
-        let gossip_send_peers = left_peers.choose_multiple(rng, GOSSIP_MESH_LEN);
+        let gossip_send_peers = left_peers.choose_multiple(rng, constants::GOSSIP_MESH_LEN);
 
         // Send to peers we know are subscribed to the topic.
         for peer_id in msg_send_peers.iter() {
@@ -213,15 +224,15 @@ impl<TSubstream> Gossipsub<TSubstream> {
         }
 
         // TODO: send gossip to left peers subscribed this topic but not in mesh
-        // IHAVE
-        let cached_msg_ids = ...;
+        // IHave, with cached msg ids
+        let cached_msg_ids = vec![];
         for peer_id in gossip_send_peers.iter() {
             self.events.push_back(NetworkBehaviourAction::SendEvent {
                 peer_id: peer_id.clone(),
                 event: GossipsubRpc {
                     subscriptions: Vec::new(),
                     messages: Vec::new(),
-                    controls: vec![GossipsubControl::IHAVE(cached_msg_ids)]
+                    controls: vec![GossipsubControl::IHave(cached_msg_ids)]
                 }
             });
         }
@@ -306,12 +317,30 @@ where
             // Propagate the message to everyone else who is subscribed to the topic in mesh
             // TODO: careful, not every msg we choose different random peers, this should only
             // be made once to form mesh content, if mesh has valid content, use it directly
-            for (peer_id, subscr_topics) in self.connected_peers.iter() {
-                if peer_id == &propagation_source {
-                    continue;
+            let mut mesh_peers = match self.mesh.entry(topic).or_insert(vec![]);
+            if mesh_peers.len() == 0 {
+                for (peer_id, sub_topic) in self.connected_peers.iter() {
+                    if sub_topic.iter().any(|t| topic == t)) {
+                        mesh_peers.push(peer_id);
+                        // TODO: when form mesh peers in this topic, we need to inform those peers to
+                        // execute ControlGraft to add this peer to its mesh overlay
+                        self.events.push_back(NetworkBehaviourAction::SendEvent {
+                            peer_id: peer_id.clone(),
+                            event: GossipsubRpc {
+                                subscriptions: Vec::new(),
+                                messages: Vec::new(),
+                                controls: vec![GossipsubControl::Graft(self.local_peer_id)]
+                            }
+                        });
+                    }
                 }
+            }
 
-                if !subscr_topics.iter().any(|t| message.topics.iter().any(|u| t == u)) {
+            // XXX: now random every time need to propagate, fix it
+            let propagate_send_peers = mesh_peers.choose_multiple(rng, constants::TARGET_MESH_DEGREE);
+
+            for peer_id in propagate_send_peers.iter() {
+                if peer_id == &propagation_source {
                     continue;
                 }
 
@@ -321,6 +350,7 @@ where
                     rpcs_to_dispatch.push((peer_id.clone(), GossipsubRpc {
                         subscriptions: Vec::new(),
                         messages: vec![message.clone()],
+                        controls: Vec::new(),
                     }));
                 }
             }
@@ -328,7 +358,7 @@ where
 
         for (peer_id, rpc) in rpcs_to_dispatch {
             self.events.push_back(NetworkBehaviourAction::SendEvent {
-                peer_id,
+                peer_id: peer_id,
                 event: rpc,
             });
         }

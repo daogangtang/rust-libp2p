@@ -18,7 +18,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-//! Implements the floodsub protocol, see also the:
+//! Implements the gossipsub protocol, see also the:
 //! [spec](https://github.com/libp2p/specs/tree/master/pubsub).
 
 extern crate bs58;
@@ -34,6 +34,7 @@ extern crate tokio_codec;
 extern crate tokio_io;
 extern crate unsigned_varint;
 
+mod constants;
 pub mod handler;
 pub mod protocol;
 

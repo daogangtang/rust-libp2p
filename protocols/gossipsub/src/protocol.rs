@@ -225,11 +225,11 @@ pub enum GossipsubSubscriptionAction {
 /// A control received by the gossipsub system.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum GossipsubControl {
-    ControlGraft(TopicHash),
-    ControlPrune(TopicHash),
-    ControlIHave {
+    Graft(TopicHash),
+    Prune(TopicHash),
+    IHave {
         topic: TopicHash,
         msgids: Vec<MessageId>
     },
-    ControlIWant(Vec<MessageId>),
+    IWant(Vec<MessageId>),
 }
