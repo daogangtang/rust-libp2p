@@ -150,9 +150,6 @@ impl<TSubstream> Gossipsub<TSubstream> {
             });
         }
 
-        // TODO: send ControlPrune to other peers in the mesh overlay
-
-
         true
     }
 
@@ -363,16 +360,34 @@ where
             });
         }
 
-        // TODO: add control msg flow here
+        // control msg process flow here
         for control_msg in event.controls {
+            match control_msg {
+                GossipsubControl::Graft(topic) => {
+                    let mut topic_mesh = self.mesh.entry(topic).or_insert(vec![]);
+                    topic_mesh.push(propagation_source);
+                },
+                GossipsubControl::Prune(topic) => {
+                    let mut topic_mesh = self.mesh.get(topic);
+                    if topic_mesh.is_some() {
+                        let mut topic_mesh = topic_mesh.unwrap();
+                        // XXX: error process
+                        match topic_mesh.iter().position(|p| p == propagation_source) {
+                            Some(pos) => {
+                                Some(topic_mesh.remove(pos))
+                            },
+                            None => None
+                        };
+                    }
+                },
+                GossipsubControl::IHave((topic, msgids)) => {
+                
+                },
+                GossipsubControl::IWant(msgids) => {
+                
+                },
+            }
 
-            // process Graft
-
-            // process Prune
-
-            // process IHAVE
-
-            // process IWANT
         }
     }
 
