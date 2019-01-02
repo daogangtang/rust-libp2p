@@ -227,6 +227,6 @@ pub enum GossipsubSubscriptionAction {
 pub enum GossipsubControl {
     Graft(TopicHash),
     Prune(TopicHash),
-    IHave((TopicHash, Vec<MessageId>)),
-    IWant(Vec<MessageId>),
+    Ihave((TopicHash, Vec<MessageId>)),
+    Iwant(Vec<MessageId>),
 }
