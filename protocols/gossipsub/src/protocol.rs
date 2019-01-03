@@ -114,6 +114,41 @@ impl Encoder for GossipsubCodec {
             proto.mut_subscriptions().push(subscription);
         }
 
+        for control_act in item.controls.into_iter() {
+            let control = rpc_proto::ControlMessage::new();
+
+            match control_act {
+                GossipsubControl::Graft(topic) => {
+                    let graft_act = rpc_proto::ControlGraft::new();
+                    graft_act.set_topicID(topic);
+                    control.set_graft(::protobuf::RepeatedField<graft_act>);
+                    //TODO: leave other 3 variants empty
+                },
+                GossipsubControl::Prune(topic) => {
+                    let prune_act = rpc_proto::ControlPrune::new();
+                    prune_act.set_topicID(topic);
+                    control.set_prune(::protobuf::RepeatedField<prune_act>);
+                    //TODO: leave other 3 variants empty
+                },
+                GossipsubControl::IHave((topic, msgids)) => {
+                    let ihave_act = rpc_proto::ControlIHave::new();
+                    ihave_act.set_topicID(topic);
+                    ihave_act.set_messageIDs(::protobuf::RepeatedField<msgids.to_string()>);
+                    control.set_ihave(::protobuf::RepeatedField<ihave_act>);
+                    //TODO: leave other 3 variants empty
+                },
+                GossipsubControl::IWant(msgids) => {
+                    let iwant_act = rpc_proto::ControlIWant::new();
+                    iwant_act.set_messageIDs(::protobuf::RepeatedField<msgids.to_string()>);
+                    control.set_iwant(::protobuf::RepeatedField<iwant_act>);
+                    //TODO: leave other 3 variants empty
+                },
+            }
+
+            proto.mut_control().push(control);
+
+        }
+
         let msg_size = proto.compute_size();
         // Reserve enough space for the data and the length. The length has a maximum of 32 bits,
         // which means that 5 bytes is enough for the variable-length integer.
@@ -157,20 +192,73 @@ impl Decoder for GossipsubCodec {
             });
         }
 
+        let subscriptions = rpc
+            .take_subscriptions()
+            .into_iter()
+            .map(|mut sub| GossipsubSubscription {
+                action: if sub.get_subscribe() {
+                    GossipsubSubscriptionAction::Subscribe
+                } else {
+                    GossipsubSubscriptionAction::Unsubscribe
+                },
+                topic: TopicHash::from_raw(sub.take_topicid()),
+            })
+            .collect();
+            
+        // XXX:
+        let controls = vec![];
+        let rpc_control = rpc.take_control();
+
+        let graft_controls = rpc_control
+            .take_graft()
+            .into_iter()
+            .map(|mut ctl| 
+                 GossipsubControl::Graft(ctl.take_topicID()))
+            .collect();
+
+        let prune_controls = rpc_control
+            .take_prune()
+            .into_iter()
+            .map(|mut ctl| 
+                 GossipsubControl::Prune(ctl.take_topicID()))
+            .collect();
+
+        let ihave_controls = rpc_control
+            .take_ihave()
+            .into_iter()
+            .map(|mut ctl| {
+                let topic = ctl.take_topicID();
+                // msgids is a string vec
+                let msgids = ctl
+                    .take_messageIDs()
+                    .into_iter()
+                    .collect();
+                GossipsubControl::IHave((topic, msgids))
+            })
+            .collect();
+
+        let iwant_controls = rpc_control
+            .take_iwant()
+            .into_iter()
+            .map(|mut ctl| {
+                // msgids is a string vec
+                let msgids = ctl
+                    .take_messageIDs()
+                    .into_iter()
+                    .collect();
+                GossipsubControl::IWant(msgids)
+            }
+            .collect();
+
+        controls.extend(graft_controls);
+        controls.extend(prune_controls);
+        controls.extend(ihave_controls);
+        controls.extend(iwant_controls);
+
         Ok(Some(GossipsubRpc {
             messages,
-            subscriptions: rpc
-                .take_subscriptions()
-                .into_iter()
-                .map(|mut sub| GossipsubSubscription {
-                    action: if sub.get_subscribe() {
-                        GossipsubSubscriptionAction::Subscribe
-                    } else {
-                        GossipsubSubscriptionAction::Unsubscribe
-                    },
-                    topic: TopicHash::from_raw(sub.take_topicid()),
-                })
-                .collect(),
+            subscriptions,
+            controls
         }))
     }
 }
@@ -227,6 +315,6 @@ pub enum GossipsubSubscriptionAction {
 pub enum GossipsubControl {
     Graft(TopicHash),
     Prune(TopicHash),
-    Ihave((TopicHash, Vec<MessageId>)),
-    Iwant(Vec<MessageId>),
+    Ihave((TopicHash, Vec<String>)),
+    Iwant(Vec<String>),
 }

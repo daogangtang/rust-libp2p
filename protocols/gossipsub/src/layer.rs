@@ -233,8 +233,7 @@ impl<TSubstream> Gossipsub<TSubstream> {
 
         // TODO: send gossip to rest peers subscribed this topic in gossip_mesh
         // IHave, with cached msg ids
-        // calc these ids
-        let cached_msg_ids = vec![];
+        let cached_msg_ids: Vec<String> = vec![];
         for peer_id in gossip_send_peers.iter() {
             self.events.push_back(NetworkBehaviourAction::SendEvent {
                 peer_id: peer_id.clone(),
@@ -353,7 +352,7 @@ where
                         event: GossipsubRpc {
                             subscriptions: Vec::new(),
                             messages: Vec::new(),
-                            controls: vec![GossipsubControl::Graft(self.local_peer_id)]
+                            controls: vec![GossipsubControl::Graft(topic)]
                         }
                     });
                 }
