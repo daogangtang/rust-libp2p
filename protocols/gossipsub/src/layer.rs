@@ -429,9 +429,14 @@ where
                     }
                 },
                 GossipsubControl::IHave((topic, msgids)) => {
+                    // receives IHave, should check msgids with received or mcache
+                    // and reorgnize needed msgids, send IWant control event to propagation_source
+                    // fill code after mcache added
                 
                 },
                 GossipsubControl::IWant(msgids) => {
+                    // receives IWant, sends normal messages from mcache according to msgids
+                    // fill code after mcache added
                 
                 },
             }

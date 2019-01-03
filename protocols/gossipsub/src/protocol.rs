@@ -114,40 +114,54 @@ impl Encoder for GossipsubCodec {
             proto.mut_subscriptions().push(subscription);
         }
 
+        let control = rpc_proto::ControlMessage::new();
+        // XXX: here, controls contain only one each enum variant
         for control_act in item.controls.into_iter() {
-            let control = rpc_proto::ControlMessage::new();
-
             match control_act {
                 GossipsubControl::Graft(topic) => {
                     let graft_act = rpc_proto::ControlGraft::new();
                     graft_act.set_topicID(topic);
-                    control.set_graft(::protobuf::RepeatedField<graft_act>);
-                    //TODO: leave other 3 variants empty
+                    let gossip_control = ::protobuf::RepeatedField::new::<rpc_proto::ControlGraft>();
+                    gossip_control.push(graft_act);
+                    control.set_graft(gossip_control);
                 },
                 GossipsubControl::Prune(topic) => {
                     let prune_act = rpc_proto::ControlPrune::new();
                     prune_act.set_topicID(topic);
-                    control.set_prune(::protobuf::RepeatedField<prune_act>);
-                    //TODO: leave other 3 variants empty
+                    let gossip_control = ::protobuf::RepeatedField::new::<rpc_proto::ControlPrune>();
+                    gossip_control.push(prune_act);
+                    control.set_prune(gossip_control);
                 },
                 GossipsubControl::IHave((topic, msgids)) => {
                     let ihave_act = rpc_proto::ControlIHave::new();
                     ihave_act.set_topicID(topic);
-                    ihave_act.set_messageIDs(::protobuf::RepeatedField<msgids.to_string()>);
-                    control.set_ihave(::protobuf::RepeatedField<ihave_act>);
-                    //TODO: leave other 3 variants empty
+                    let messageids = ::protobuf::RepeatedField::new::<String>();
+                    for msgid in msgids.iter() {
+                        messageids.push(msgid);
+                    }
+                    ihave_act.set_messageIDs(messageids);
+
+                    let gossip_control = ::protobuf::RepeatedField::new::<rpc_proto::ControlIHave>();
+                    gossip_control.push(ihave_act);
+                    control.set_ihave(gossip_control);
                 },
                 GossipsubControl::IWant(msgids) => {
                     let iwant_act = rpc_proto::ControlIWant::new();
-                    iwant_act.set_messageIDs(::protobuf::RepeatedField<msgids.to_string()>);
-                    control.set_iwant(::protobuf::RepeatedField<iwant_act>);
-                    //TODO: leave other 3 variants empty
+                    let messageids = ::protobuf::RepeatedField::new::<String>();
+                    for msgid in msgids.iter() {
+                        messageids.push(msgid);
+                    }
+                    iwant_act.set_messageIDs(messageids);
+
+                    let gossip_control = ::protobuf::RepeatedField::new::<rpc_proto::ControlIWant>();
+                    gossip_control.push(iwant_act);
+                    control.set_ihave(gossip_control);
                 },
             }
 
-            proto.mut_control().push(control);
 
         }
+        proto.mut_control().push(control);
 
         let msg_size = proto.compute_size();
         // Reserve enough space for the data and the length. The length has a maximum of 32 bits,
