@@ -114,54 +114,54 @@ impl Encoder for GossipsubCodec {
             proto.mut_subscriptions().push(subscription);
         }
 
-        let control = rpc_proto::ControlMessage::new();
+        let mut control = rpc_proto::ControlMessage::new();
         // XXX: here, controls contain only one each enum variant
         for control_act in item.controls.into_iter() {
             match control_act {
                 GossipsubControl::Graft(topic) => {
-                    let graft_act = rpc_proto::ControlGraft::new();
-                    graft_act.set_topicID(topic);
-                    let gossip_control = ::protobuf::RepeatedField::new::<rpc_proto::ControlGraft>();
+                    let mut graft_act = rpc_proto::ControlGraft::new();
+                    graft_act.set_topicID(topic.into_string());
+                    let mut gossip_control: ::protobuf::RepeatedField<rpc_proto::ControlGraft> = ::protobuf::RepeatedField::new();
                     gossip_control.push(graft_act);
                     control.set_graft(gossip_control);
                 },
                 GossipsubControl::Prune(topic) => {
-                    let prune_act = rpc_proto::ControlPrune::new();
-                    prune_act.set_topicID(topic);
-                    let gossip_control = ::protobuf::RepeatedField::new::<rpc_proto::ControlPrune>();
+                    let mut prune_act = rpc_proto::ControlPrune::new();
+                    prune_act.set_topicID(topic.into_string());
+                    let mut gossip_control: ::protobuf::RepeatedField<rpc_proto::ControlPrune> = ::protobuf::RepeatedField::new();
                     gossip_control.push(prune_act);
                     control.set_prune(gossip_control);
                 },
                 GossipsubControl::IHave((topic, msgids)) => {
-                    let ihave_act = rpc_proto::ControlIHave::new();
-                    ihave_act.set_topicID(topic);
-                    let messageids = ::protobuf::RepeatedField::new::<String>();
+                    let mut ihave_act = rpc_proto::ControlIHave::new();
+                    ihave_act.set_topicID(topic.into_string());
+                    let mut messageids: ::protobuf::RepeatedField<String> = ::protobuf::RepeatedField::new();
                     for msgid in msgids.iter() {
-                        messageids.push(msgid);
+                        messageids.push(msgid.clone());
                     }
                     ihave_act.set_messageIDs(messageids);
 
-                    let gossip_control = ::protobuf::RepeatedField::new::<rpc_proto::ControlIHave>();
+                    let mut gossip_control: ::protobuf::RepeatedField<rpc_proto::ControlIHave> = ::protobuf::RepeatedField::new();
                     gossip_control.push(ihave_act);
                     control.set_ihave(gossip_control);
                 },
                 GossipsubControl::IWant(msgids) => {
-                    let iwant_act = rpc_proto::ControlIWant::new();
-                    let messageids = ::protobuf::RepeatedField::new::<String>();
+                    let mut iwant_act = rpc_proto::ControlIWant::new();
+                    let mut messageids: ::protobuf::RepeatedField<String> = ::protobuf::RepeatedField::new();
                     for msgid in msgids.iter() {
-                        messageids.push(msgid);
+                        messageids.push(msgid.clone());
                     }
                     iwant_act.set_messageIDs(messageids);
 
-                    let gossip_control = ::protobuf::RepeatedField::new::<rpc_proto::ControlIWant>();
+                    let mut gossip_control: ::protobuf::RepeatedField<rpc_proto::ControlIWant> = ::protobuf::RepeatedField::new();
                     gossip_control.push(iwant_act);
-                    control.set_ihave(gossip_control);
+                    control.set_iwant(gossip_control);
                 },
             }
 
 
         }
-        proto.mut_control().push(control);
+        proto.set_control(control);
 
         let msg_size = proto.compute_size();
         // Reserve enough space for the data and the length. The length has a maximum of 32 bits,
@@ -219,29 +219,29 @@ impl Decoder for GossipsubCodec {
             })
             .collect();
             
-        // XXX:
-        let controls = vec![];
-        let rpc_control = rpc.take_control();
+        // decode controls
+        let mut controls = vec![];
+        let mut rpc_control = rpc.take_control();
 
-        let graft_controls = rpc_control
+        let mut graft_controls: Vec<GossipsubControl> = rpc_control
             .take_graft()
             .into_iter()
             .map(|mut ctl| 
-                 GossipsubControl::Graft(ctl.take_topicID()))
+                 GossipsubControl::Graft(TopicHash::from_raw(ctl.take_topicID())))
             .collect();
 
-        let prune_controls = rpc_control
+        let mut prune_controls: Vec<GossipsubControl> = rpc_control
             .take_prune()
             .into_iter()
             .map(|mut ctl| 
-                 GossipsubControl::Prune(ctl.take_topicID()))
+                 GossipsubControl::Prune(TopicHash::from_raw(ctl.take_topicID())))
             .collect();
 
-        let ihave_controls = rpc_control
+        let mut ihave_controls: Vec<GossipsubControl> = rpc_control
             .take_ihave()
             .into_iter()
             .map(|mut ctl| {
-                let topic = ctl.take_topicID();
+                let topic = TopicHash::from_raw(ctl.take_topicID());
                 // msgids is a string vec
                 let msgids = ctl
                     .take_messageIDs()
@@ -251,7 +251,7 @@ impl Decoder for GossipsubCodec {
             })
             .collect();
 
-        let iwant_controls = rpc_control
+        let mut iwant_controls: Vec<GossipsubControl> = rpc_control
             .take_iwant()
             .into_iter()
             .map(|mut ctl| {
@@ -261,7 +261,7 @@ impl Decoder for GossipsubCodec {
                     .into_iter()
                     .collect();
                 GossipsubControl::IWant(msgids)
-            }
+            })
             .collect();
 
         controls.extend(graft_controls);
@@ -329,6 +329,6 @@ pub enum GossipsubSubscriptionAction {
 pub enum GossipsubControl {
     Graft(TopicHash),
     Prune(TopicHash),
-    Ihave((TopicHash, Vec<String>)),
-    Iwant(Vec<String>),
+    IHave((TopicHash, Vec<String>)),
+    IWant(Vec<String>),
 }

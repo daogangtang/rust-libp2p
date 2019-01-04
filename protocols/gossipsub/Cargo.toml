@@ -1,6 +1,6 @@
 [package]
-name = "libp2p-floodsub"
-description = "Floodsub protocol for libp2p"
+name = "libp2p-gossipsub"
+description = "Gossipsub protocol for libp2p"
 version = "0.1.0"
 authors = ["Parity Technologies <admin@parity.io>"]
 license = "MIT"
